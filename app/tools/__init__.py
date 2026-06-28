@@ -6,3 +6,7 @@ import app.tools.terminal_tools   # Phase 3
 import app.tools.git_tools        # Phase 3
 import app.tools.vscode_tools     # Phase 3
 import app.tools.project_tools    # Phase 3
+import app.tools.clipboard_tools  # Phase 4
+import app.tools.filesystem_tools # Phase 4
+import app.tools.app_tools        # Phase 4
+import app.tools.window_tools     # Phase 4

@@ -24,8 +24,12 @@ class MemorySettings(BaseModel):
 
 class VoiceSettings(BaseModel):
     enabled: bool = False
-    stt_model: str = "base"
-    tts_engine: str = "piper"
+    trigger_mode: str = "push_to_talk"
+    hotkey: str = "ctrl+space"
+    stt_engine: str = "whisper"
+    tts_engine: str = "sapi"
+    max_spoken_sentences: int = 3
+    speaking_rate: int = 0
 
 class PathSettings(BaseModel):
     knowledge_base: str = "./knowledge_base"
@@ -38,6 +42,10 @@ class AppConfig(BaseSettings):
     memory: MemorySettings = MemorySettings()
     voice: VoiceSettings = VoiceSettings()
     paths: PathSettings = PathSettings()
+    allowed_applications: dict[str, str] = Field(default_factory=dict)
+    google_search_api_key: Optional[str] = Field(None, validation_alias="GOOGLE_SEARCH_API_KEY")
+    google_search_cx: Optional[str] = Field(None, validation_alias="GOOGLE_SEARCH_CX")
+    serper_api_key: Optional[str] = Field(None, validation_alias="SERPER_API_KEY")
 
     # Environment variables mapped from .env
     gemini_api_key: Optional[str] = Field(None, validation_alias="GEMINI_API_KEY")
@@ -49,7 +57,8 @@ class AppConfig(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
-        extra="ignore"
+        extra="ignore",
+        populate_by_name=True
     )
 
     @classmethod

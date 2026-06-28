@@ -12,6 +12,19 @@ websockets
 pymongo
 chromadb
 
+# Automation
+pyperclip
+pygetwindow
+pywin32
+pyautogui
+send2trash
+
+# Voice
+sounddevice
+keyboard
+faster-whisper
+SpeechRecognition
+
 # Utilities
 loguru
 python-dotenv
