@@ -1,0 +1,23 @@
+# AI
+google-genai
+pydantic>=2.0
+pydantic-settings
+
+# Backend
+fastapi
+uvicorn
+websockets
+
+# Memory
+pymongo
+chromadb
+
+# Utilities
+loguru
+python-dotenv
+pyyaml
+rich
+typer
+
+# Testing
+pytest

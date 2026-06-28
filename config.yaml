@@ -1,0 +1,26 @@
+klause:
+  name: KLAUSE
+  version: 0.1.0
+  wake_word: "klause"
+
+ai:
+  gemini_model: gemini-3.1-flash-lite-preview
+  embedding_model: models/embedding-001
+  max_tokens: 8192
+  max_steps: 10
+
+memory:
+  mongo_uri: mongodb://localhost:27017/
+  mongo_db: klause
+  chroma_path: ./data/chroma
+  max_conversation_history: 50
+
+voice:
+  enabled: false
+  stt_model: base
+  tts_engine: piper
+
+paths:
+  knowledge_base: ./knowledge_base
+  projects: ./projects
+  logs: ./logs
