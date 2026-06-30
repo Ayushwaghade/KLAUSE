@@ -13,14 +13,46 @@ memory:
   mongo_uri: mongodb://localhost:27017/
   mongo_db: klause
   chroma_path: ./data/chroma
-  max_conversation_history: 50
+  max_conversation_history: 100
 
 voice:
-  enabled: false
-  stt_model: base
-  tts_engine: piper
+  enabled: true
+  trigger_mode: "push_to_talk"
+  hotkey: "ctrl+space"
+  stt_engine: "whisper"
+  tts_engine: "sapi"
+  max_spoken_sentences: 3
+  speaking_rate: 0
+  live_typer:
+    hotkey: "ctrl+shift+v"
+    chunk_seconds: 2
+    max_duration_seconds: 300
+
+# Google Custom Search API settings (optional, falls back to DuckDuckGo if blank)
+google_search_api_key: ""
+google_search_cx: ""
+
+# Serper API Key (optional, falls back to DuckDuckGo if blank)
+serper_api_key: "ec6553678ae1c5077c5557071b7f4ba76f08797a"
 
 paths:
   knowledge_base: ./knowledge_base
   projects: ./projects
   logs: ./logs
+
+allowed_applications:
+  notepad: notepad.exe
+  calc: calc.exe
+  explorer: explorer.exe
+  cmd: cmd.exe
+  mspaint: mspaint.exe
+  taskmgr: taskmgr.exe
+  chrome: "C:/Program Files/Google/Chrome/Application/chrome.exe"
+  brave: "C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe"
+
+instagram:
+  username: ""
+  password: ""
+  max_likes: 10
+  max_follows: 5
+

@@ -37,6 +37,37 @@ class Dispatcher:
         tool_inst = tool_registry[tool_name]
         
         try:
+            # Code-level boundary check for Universal Rule 1 (Session Data Folder)
+            from app.core.context import context
+            session_folder = context.session_data_folder
+            if session_folder:
+                import os
+                target_path = None
+                if "path" in params:
+                    target_path = params["path"]
+                elif "output_path" in params:
+                    target_path = params["output_path"]
+                elif "dest" in params:
+                    target_path = params["dest"]
+
+                write_tools = ["write_file", "download_file", "fs_copy", "fs_move", "fs_delete", "instagram_post_photo"]
+                if tool_name in write_tools and target_path:
+                    abs_target = os.path.abspath(target_path)
+                    abs_session = os.path.abspath(session_folder)
+                    if not abs_target.startswith(abs_session):
+                        prompt_text = (
+                            f"Rule Violation Warning: Tool '{tool_name}' wants to write outside the active session "
+                            f"folder to '{abs_target}'. Allow this write exception?"
+                        )
+                        approved = self.confirm_fn(prompt_text)
+                        if not approved:
+                            return ToolObservation(
+                                tool_name=tool_name,
+                                success=False,
+                                result="",
+                                error=f"RULE_VIOLATION: Writing to '{abs_target}' blocked by user."
+                            )
+
             # Map parameters
             sig = inspect.signature(tool_inst.func)
             kwargs = params.copy()

@@ -98,3 +98,36 @@ def test_brain_self_healing_parameters():
         assert response == "Finished"
         mock_dispatcher.execute.assert_called_once_with("write_file", {"path": "test.txt", "content": "hello"})
         assert mock_gemini_client.models.generate_content.call_count == 2
+
+@patch("urllib.request.urlopen")
+def test_web_search_success(mock_urlopen):
+    mock_response = MagicMock()
+    mock_response.read.return_value = (
+        b"<html><body>"
+        b"<a href='https://test.com' class='result-link'>Test Title</a>"
+        b"<td class='result-snippet'>Test Snippet</td>"
+        b"</body></html>"
+    )
+    mock_urlopen.return_value.__enter__.return_value = mock_response
+    
+    from app.tools.system_tools import web_search
+    res = web_search("query")
+    assert "Test Title" in res
+    assert "https://test.com" in res
+    assert "Test Snippet" in res
+
+@patch("urllib.request.urlopen")
+def test_download_file_success(mock_urlopen):
+    from unittest.mock import mock_open
+    mock_response = MagicMock()
+    mock_response.read.return_value = b"file-content"
+    mock_urlopen.return_value.__enter__.return_value = mock_response
+    
+    with patch("builtins.open", mock_open()) as mock_file:
+        with patch("os.makedirs") as mock_makedirs:
+            with patch("os.path.exists", return_value=False):
+                from app.tools.system_tools import download_file
+                res = download_file("https://example.com/file.txt", "dest/file.txt")
+                assert "Success" in res
+                assert "12" in res
+                mock_makedirs.assert_called_once_with("dest", exist_ok=True)

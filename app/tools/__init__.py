@@ -10,3 +10,10 @@ import app.tools.clipboard_tools  # Phase 4
 import app.tools.filesystem_tools # Phase 4
 import app.tools.app_tools        # Phase 4
 import app.tools.window_tools     # Phase 4
+import app.tools.browser_tools    # Phase 6
+import app.tools.instagram_tools  # Instagram Integration
+import app.tools.session_tools    # Universal Rules Integration
+import app.tools.rules_tools      # Universal Rules Integration
+import app.tools.kb_tools         # Phase 7 Knowledge Base
+import app.tools.vision_tools     # Phase 8 Vision
+import app.tools.skill_repo_tools  # Expert Skills Ingest

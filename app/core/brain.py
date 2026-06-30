@@ -14,6 +14,8 @@ from app.core.context import context
 # Force tool registration on package import
 import app.tools
 
+from app.core.client import get_gemini_client
+
 class Brain:
     def __init__(self, dispatcher: Optional[Dispatcher] = None):
         self.api_key = settings.gemini_api_key or os.environ.get("GEMINI_API_KEY")
@@ -45,7 +47,7 @@ class Brain:
                 
                 params_properties[param_name] = {
                     "type": schema_type,
-                    "description": f"Tool argument '{param_name}'."
+                    "description": f"Parameter: {param_name}"
                 }
         
         self.schema = {
@@ -53,7 +55,7 @@ class Brain:
             "properties": {
                 "thought": {
                     "type": "string",
-                    "description": "Your step-by-step reasoning on what to do next."
+                    "description": "Your internal thoughts, reasoning process, and next plan."
                 },
                 "action": {
                     "type": "string",
@@ -72,15 +74,12 @@ class Brain:
             "required": ["thought", "action", "params"]
         }
         
-        if self.api_key:
-            try:
-                # Initialize new google-genai Client
-                self.client = genai.Client(api_key=self.api_key)
-                self.is_connected = True
-                logger.info(f"Brain initialized with new google-genai Client, model: {self.model_name}")
-            except Exception as e:
-                logger.error(f"Failed to initialize Gemini API: {e}")
+        self.client = get_gemini_client()
+        if self.client:
+            self.is_connected = True
+            logger.info(f"Brain initialized with shared Client, model: {self.model_name}")
         else:
+            self.is_connected = False
             logger.warning("No GEMINI_API_KEY found in config or env. KLAUSE will run in offline stub mode.")
 
     def think(self, user_input: str, session_id: str = "default_session") -> str:
@@ -90,6 +89,49 @@ class Brain:
             return (
                 "KLAUSE is running in offline stub mode. To enable AI responses, "
                 "please set your `GEMINI_API_KEY` in the `.env` file."
+            )
+
+        # Detect and pre-load matched skills from cloned skill repository
+        loaded_skill_str = self._maybe_load_relevant_skill(user_input)
+
+        # Set session context properties
+        from app.core.context import context
+        context.session_id = session_id
+        
+        # Load stored session folder from JSON config if not loaded
+        from app.tools.session_tools import _load_session_settings
+        settings_data = _load_session_settings()
+        if not context.session_data_folder:
+            stored_folder = settings_data.get("sessions", {}).get(session_id)
+            if stored_folder:
+                context.session_data_folder = stored_folder
+
+        last_used_folder = settings_data.get("last_used_data_folder")
+        if context.session_data_folder:
+            session_folder_str = f"Active Session Data Folder: '{context.session_data_folder}'\n\n"
+        else:
+            last_prompt = f"'{last_used_folder}'" if last_used_folder else "None"
+            session_folder_str = (
+                f"Active Session Data Folder: UNSET.\n"
+                f"CRITICAL DIRECTIVE: You do not have an active session folder set for this session yet. "
+                f"You MUST ask Ayush in your opening response if they want to reuse the last used session folder: {last_prompt}, "
+                f"or specify a new folder path using the 'set_session_data_folder' tool. "
+                f"Do not perform any file-writing actions until this is configured!\n\n"
+            )
+
+        # Load all rules by default to ensure 100% compliance under high token headroom
+        from app.core.rules_manager import get_rules_manager
+        rules_str = get_rules_manager().get_rules(filter_tag=None)
+        rules_block_str = ""
+        if rules_str:
+            rules_block_str = (
+                f"STRICT USER RULES (rules.md):\n"
+                f"{rules_str}\n\n"
+                f"CRITICAL COMPLIANCE DIRECTIVE:\n"
+                f"1. You must strictly follow the rules above. Before choosing any Action, evaluate your thought against these rules. "
+                f"If executing the action would violate or conflict with any rule (e.g. writing files outside the session folder, or proceeding without a configured session folder), "
+                f"you MUST NOT execute the tool. Instead, set action='FINAL', explain the rule collision to Ayush, and ask for explicit permission to bypass the rule.\n"
+                f"2. You can modify, add, or remove rules in 'rules.md' using the modify_rules tool whenever Ayush explicitly asks you to do so.\n\n"
             )
 
         # Save user message to MongoDB conversations
@@ -102,10 +144,11 @@ class Brain:
         except Exception as e:
             logger.warning(f"Failed to auto-save user conversation: {e}")
 
-        # Retrieve past conversation history from memory manager
+        # Retrieve past conversation history from memory manager based on config limits
         past_history_str = ""
         try:
-            past_messages = get_memory_manager().get_conversation_history(session_id=session_id, limit=8)
+            history_limit = getattr(settings.memory, "max_conversation_history", 50)
+            past_messages = get_memory_manager().get_conversation_history(session_id=session_id, limit=history_limit)
             if past_messages:
                 past_history_str = "Previous Conversation Turns:\n"
                 for msg in past_messages:
@@ -117,6 +160,23 @@ class Brain:
                 past_history_str += "\n"
         except Exception as e:
             logger.warning(f"Failed to retrieve conversation history: {e}")
+
+        # Retrieve relevant semantic memories (RAG)
+        relevant_memories_str = ""
+        try:
+            memories = get_memory_manager().search_semantic_memories(user_input, limit=8)
+            # Filter by relevance: distance < 1.6
+            valid_memories = [m for m in memories if m.get("distance", 2.0) < 1.6]
+            if valid_memories:
+                relevant_memories_str = "Relevant Memories & Context (RAG):\n"
+                for m in valid_memories:
+                    doc_type = m["type"].upper()
+                    meta = m["metadata"] or {}
+                    title_info = f" (Title: {meta.get('title')})" if 'title' in meta else ""
+                    relevant_memories_str += f"  - [{doc_type}]{title_info}: {m['content']}\n"
+                relevant_memories_str += "\n"
+        except Exception as e:
+            logger.warning(f"Failed to retrieve semantic memories: {e}")
 
         history: List[Dict[str, Any]] = []
         
@@ -155,6 +215,10 @@ class Brain:
                 "3. If you have completed the goal, set action='FINAL' and provide your final response to the user.\n"
                 "4. Avoid repeating a failing action with the exact same parameters.\n\n"
                 f"{active_proj_str}"
+                f"{session_folder_str}"
+                f"{rules_block_str}"
+                f"{loaded_skill_str}"
+                f"{relevant_memories_str}"
                 f"{past_history_str}"
                 f"User Goal: {user_input}\n\n"
                 f"Current Progress:\n{history_str or 'No steps taken yet.'}\n"
@@ -241,3 +305,53 @@ class Brain:
         except Exception as e:
             logger.warning(f"Failed to auto-save assistant warning response: {e}")
         return final_resp
+
+    def _quick_gemini_call(self, prompt: str) -> str:
+        """Runs a fast text generation call on Gemini without schemas or tools."""
+        if not self.is_connected or not self.client:
+            return "none"
+        try:
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt
+            )
+            if response and response.text:
+                return response.text.strip()
+        except Exception as e:
+            logger.warning(f"Quick Gemini Call failed: {e}")
+        return "none"
+
+    def _maybe_load_relevant_skill(self, user_input: str) -> str:
+        """Lightweight pre-check — does this request match a known skill?"""
+        from app.core.skill_repo import get_skill_summaries, load_skill_full_text
+        try:
+            summaries = get_skill_summaries()
+            if not summaries.strip():
+                return ""
+        except Exception:
+            return ""
+
+        check_prompt = f"""
+        User request: "{user_input}"
+
+        Available expert skills:
+        {summaries}
+
+        Does this request clearly match ONE of these skills? 
+        Reply with ONLY the exact skill name, or "none" if no clear match.
+        Do not output any introductory or formatting text.
+        """
+        result = self._quick_gemini_call(check_prompt).strip()
+
+        if result and result.lower() != "none":
+            # Strip potential quotes/md formatting
+            clean_result = result.replace("`", "").replace("'", "").replace('"', "").strip()
+            # If the output returned has newlines, take the first line
+            clean_result = clean_result.split("\n")[0].strip()
+            
+            skill_text = load_skill_full_text(clean_result)
+            if skill_text:
+                logger.info(f"Auto-loaded skill: {clean_result}")
+                return f"\n\nLOADED EXPERT SKILL — {clean_result}:\n{skill_text}\n\n"
+        return ""
+

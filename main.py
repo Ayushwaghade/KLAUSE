@@ -9,6 +9,7 @@ from app.config.config import settings
 from app.core.logging_setup import setup_logging
 from app.core.brain import Brain
 from app.voice.voice_manager import VoiceManager, voice_input_queue
+from app.voice.voice_typer import LiveVoiceTyper
 
 # Initialize logger
 setup_logging()
@@ -20,6 +21,10 @@ session_id = str(uuid.uuid4())
 # Initialize Voice Manager
 voice_manager = VoiceManager()
 voice_manager.start()
+
+# Initialize and start Live Voice Typer
+voice_typer = LiveVoiceTyper()
+voice_typer.start()
 
 text_input_queue = queue.Queue()
 
@@ -72,6 +77,7 @@ def main():
                 
                 if user_input.lower() in ("exit", "quit"):
                     console.print("[bold yellow]Shutting down KLAUSE. Goodbye![/bold yellow]")
+                    voice_typer.stop()
                     break
                     
                 response = brain.think(user_input, session_id=session_id)
@@ -86,6 +92,7 @@ def main():
             
         except KeyboardInterrupt:
             console.print("\n[bold yellow]Session interrupted. Goodbye![/bold yellow]")
+            voice_typer.stop()
             voice_manager.stop_speaking()
             sys.exit(0)
         except Exception as e:

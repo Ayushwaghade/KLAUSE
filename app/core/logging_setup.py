@@ -6,6 +6,15 @@ def setup_logging():
     # Remove default handler
     logger.remove()
     
+    import os
+    pw = os.environ.get("INSTAGRAM_PASSWORD") or settings.instagram.password
+    
+    def patcher(record):
+        if pw and len(str(pw)) > 2 and str(pw) in record["message"]:
+            record["message"] = record["message"].replace(str(pw), "[REDACTED_PASSWORD]")
+            
+    logger.configure(patcher=patcher)
+    
     # Add stdout handler with rich coloring
     logger.add(
         sys.stdout,

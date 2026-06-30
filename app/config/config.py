@@ -22,6 +22,11 @@ class MemorySettings(BaseModel):
     chroma_path: str = "./data/chroma"
     max_conversation_history: int = 50
 
+class LiveTyperSettings(BaseModel):
+    hotkey: str = "ctrl+shift+v"
+    chunk_seconds: int = 2
+    max_duration_seconds: int = 300
+
 class VoiceSettings(BaseModel):
     enabled: bool = False
     trigger_mode: str = "push_to_talk"
@@ -30,11 +35,18 @@ class VoiceSettings(BaseModel):
     tts_engine: str = "sapi"
     max_spoken_sentences: int = 3
     speaking_rate: int = 0
+    live_typer: LiveTyperSettings = LiveTyperSettings()
 
 class PathSettings(BaseModel):
     knowledge_base: str = "./knowledge_base"
     projects: str = "./projects"
     logs: str = "./logs"
+
+class InstagramSettings(BaseModel):
+    username: str = ""
+    password: str = ""
+    max_likes: int = 10
+    max_follows: int = 5
 
 class AppConfig(BaseSettings):
     klause: KlauseSettings = KlauseSettings()
@@ -42,6 +54,7 @@ class AppConfig(BaseSettings):
     memory: MemorySettings = MemorySettings()
     voice: VoiceSettings = VoiceSettings()
     paths: PathSettings = PathSettings()
+    instagram: InstagramSettings = InstagramSettings()
     allowed_applications: dict[str, str] = Field(default_factory=dict)
     google_search_api_key: Optional[str] = Field(None, validation_alias="GOOGLE_SEARCH_API_KEY")
     google_search_cx: Optional[str] = Field(None, validation_alias="GOOGLE_SEARCH_CX")

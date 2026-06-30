@@ -34,3 +34,9 @@ typer
 
 # Testing
 pytest
+playwright
+instagrapi
+pypdf
+python-docx
+mss
+pytesseract

@@ -1,6 +1,44 @@
+import os
 import chromadb
+from chromadb.api.types import EmbeddingFunction, Documents, Embeddings
+from google import genai
 from loguru import logger
 from app.config.config import settings
+
+class GeminiEmbeddingFunction(EmbeddingFunction):
+    """Custom embedding function utilizing Gemini models/text-embedding-004 API."""
+    def __init__(self):
+        self.api_key = os.environ.get("GEMINI_API_KEY")
+        self.client = None
+        if self.api_key:
+            try:
+                self.client = genai.Client()
+            except Exception as e:
+                logger.warning(f"Failed to instantiate Gemini Client for embeddings: {e}")
+        self.model = "models/text-embedding-004"
+        if hasattr(settings, "ai") and settings.ai.embedding_model:
+            self.model = settings.ai.embedding_model
+
+    def __call__(self, input: Documents) -> Embeddings:
+        if not self.client:
+            logger.warning("Gemini Client not connected. Returning empty placeholder embeddings.")
+            return [[0.0] * 768 for _ in input]
+            
+        embeddings = []
+        try:
+            for text in input:
+                res = self.client.models.embed_content(
+                    model=self.model,
+                    contents=text
+                )
+                if res and res.embeddings:
+                    embeddings.append(res.embeddings[0].values)
+                else:
+                    embeddings.append([0.0] * 768)
+        except Exception as e:
+            logger.error(f"Gemini embedding generation failed: {e}")
+            return [[0.0] * 768 for _ in input]
+        return embeddings
 
 class MockChromaCollection:
     def __init__(self):
@@ -13,8 +51,15 @@ class MockChromaCollection:
         self.metadatas.extend(metadatas)
         self.ids.extend(ids)
 
+    def delete(self, ids=None, where=None):
+        if ids:
+            for idx in reversed(range(len(self.ids))):
+                if self.ids[idx] in ids:
+                    self.ids.pop(idx)
+                    self.documents.pop(idx)
+                    self.metadatas.pop(idx)
+
     def query(self, query_texts, n_results=5):
-        # Return all documents up to n_results
         limit = min(n_results, len(self.ids))
         return {
             "ids": [self.ids[:limit]],
@@ -30,15 +75,36 @@ class ChromaStore:
         logger.info(f"Initializing local persistent ChromaDB client at: {self.chroma_path}")
         
         try:
+            self.emb_fn = GeminiEmbeddingFunction()
             self.client = chromadb.PersistentClient(path=self.chroma_path)
-            self.notes_collection = self.client.get_or_create_collection(name="notes")
-            self.research_collection = self.client.get_or_create_collection(name="research")
+            self.notes_collection = self.client.get_or_create_collection(
+                name="notes",
+                embedding_function=self.emb_fn
+            )
+            self.research_collection = self.client.get_or_create_collection(
+                name="research",
+                embedding_function=self.emb_fn
+            )
             self.is_connected = True
-            logger.info("ChromaDB collections 'notes' and 'research' successfully loaded/created.")
+            logger.info("ChromaDB collections 'notes' and 'research' successfully loaded/created with Gemini embeddings.")
         except Exception as e:
             logger.warning(f"Failed to initialize ChromaDB: {e}. Falling back to In-Memory Chroma client.")
             self.notes_collection = MockChromaCollection()
             self.research_collection = MockChromaCollection()
+
+    def delete_note(self, note_id: str):
+        logger.debug(f"Deleting note {note_id} from ChromaDB.")
+        try:
+            self.notes_collection.delete(ids=[note_id])
+        except Exception as e:
+            logger.warning(f"Failed to delete note {note_id} from ChromaDB: {e}")
+
+    def delete_research(self, research_id: str):
+        logger.debug(f"Deleting research {research_id} from ChromaDB.")
+        try:
+            self.research_collection.delete(ids=[research_id])
+        except Exception as e:
+            logger.warning(f"Failed to delete research {research_id} from ChromaDB: {e}")
 
     def add_note(self, note_id: str, content: str, metadata: dict):
         logger.debug(f"Adding note {note_id} to ChromaDB semantic index.")
