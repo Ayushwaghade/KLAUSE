@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pong Turbo Edition</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background: #121212;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+      }
+      canvas {
+        background: #000;
+        border: 2px solid #fff;
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="text-center mb-3">
+      <h1>Pong Turbo Edition</h1>
+      <div id="score" class="h3">Player: 0 | CPU: 0</div>
+    </div>
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <script>
+      const canvas = document.getElementById("gameCanvas");
+      const ctx = canvas.getContext("2d");
+      let pScore = 0,
+        cScore = 0;
+      const ball = { x: 400, y: 200, dx: 5, dy: 5, size: 10 };
+      const p1 = { x: 10, y: 150, w: 10, h: 80, dy: 0 };
+      const p2 = { x: 780, y: 150, w: 10, h: 80 };
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowUp") p1.dy = -6;
+        if (e.key === "ArrowDown") p1.dy = 6;
+      });
+      document.addEventListener("keyup", () => (p1.dy = 0));
+      function update() {
+        p1.y += p1.dy;
+        p1.y = Math.max(0, Math.min(320, p1.y));
+        p2.y += (ball.y - (p2.y + 40)) * 0.1;
+        ball.x += ball.dx;
+        ball.y += ball.dy;
+        if (ball.y <= 0 || ball.y >= 390) ball.dy *= -1;
+        if (
+          (ball.x <= 20 && ball.y > p1.y && ball.y < p1.y + 80) ||
+          (ball.x >= 770 && ball.y > p2.y && ball.y < p2.y + 80)
+        )
+          ball.dx *= -1.05;
+        if (ball.x < 0) {
+          cScore++;
+          reset();
+        }
+        if (ball.x > 800) {
+          pScore++;
+          reset();
+        }
+        document.getElementById(
+          "score"
+        ).innerText = `Player: ${pScore} | CPU: ${cScore}`;
+      }
+      function reset() {
+        ball.x = 400;
+        ball.y = 200;
+        ball.dx *= -1;
+      }
+      function draw() {
+        ctx.clearRect(0, 0, 800, 400);
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(p1.x, p1.y, p1.w, p1.h);
+        ctx.fillRect(p2.x, p2.y, p2.w, p2.h);
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, ball.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      function gameLoop() {
+        update();
+        draw();
+        requestAnimationFrame(gameLoop);
+      }
+      gameLoop();
+    </script>
+  </body>
+</html>

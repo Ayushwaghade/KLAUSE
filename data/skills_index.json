@@ -1,0 +1,860 @@
+[
+  {
+    "name": "agenthub",
+    "description": "Multi-agent collaboration plugin that spawns N parallel subagents competing on the same task via git worktree isolation. Agents work independently, results are evaluated by metric or LLM judge, and th",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\agenthub\\skills\\agenthub\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "board",
+    "description": "Read, write, and browse the AgentHub message board for agent coordination. Use when the user runs /hub:board or asks to post, read, or inspect coordination messages between competing AgentHub agents.",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\agenthub\\skills\\board\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "eval",
+    "description": "Evaluate and rank agent results by metric or LLM judge for an AgentHub session. Use when the user runs /hub:eval or asks to score, compare, or pick a winner among completed AgentHub agents.",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\agenthub\\skills\\eval\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "init",
+    "description": "Create a new AgentHub collaboration session with task, agent count, and evaluation criteria. Use when the user runs /hub:init or asks to start a multi-agent competition on a task.",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\agenthub\\skills\\init\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "merge",
+    "description": "Merge the winning agent's branch into base, archive losers, and clean up worktrees. Use when the user runs /hub:merge or asks to land the winning AgentHub result and tidy the session.",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\agenthub\\skills\\merge\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "run",
+    "description": "One-shot lifecycle command that chains init \u2192 baseline \u2192 spawn \u2192 eval \u2192 merge in a single invocation. Use when the user runs /hub:run or asks to execute a full AgentHub competition end-to-end.",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\agenthub\\skills\\run\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "spawn",
+    "description": "Launch N parallel subagents in isolated git worktrees to compete on the session task. Use when the user runs /hub:spawn or asks to start the competing agents for an initialized AgentHub session.",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\agenthub\\skills\\spawn\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "status",
+    "description": "Show DAG state, agent progress, and branch status for an AgentHub session. Use when the user runs /hub:status or asks how the AgentHub agents are doing.",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\agenthub\\skills\\status\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "autoresearch-agent",
+    "description": "Autonomous experiment loop that optimizes any file by a measurable metric. Inspired by Karpathy's autoresearch. The agent edits a target file, runs a fixed evaluation, keeps improvements (git commit),",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\autoresearch-agent\\skills\\autoresearch-agent\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "loop",
+    "description": "Start an autonomous experiment loop with user-selected interval (10min, 1h, daily, weekly, monthly). Uses CronCreate for scheduling. Use when the user runs /ar:loop or asks to run an autoresearch expe",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\autoresearch-agent\\skills\\loop\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "resume",
+    "description": "Resume a paused experiment. Checkout the experiment branch, read results history, continue iterating. Use when the user runs /ar:resume or asks to pick up a previously started autoresearch experiment.",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\autoresearch-agent\\skills\\resume\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "run",
+    "description": "Run a single experiment iteration. Edit the target file, evaluate, keep or discard. Use when the user runs /ar:run or asks for one manual autoresearch iteration.",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\autoresearch-agent\\skills\\run\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "setup",
+    "description": "Set up a new autoresearch experiment interactively. Collects domain, target file, eval command, metric, direction, and evaluator. Use when the user runs /ar:setup or asks to start optimizing a file wi",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\autoresearch-agent\\skills\\setup\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "status",
+    "description": "Show experiment dashboard with results, active loops, and progress. Use when the user runs /ar:status or asks how an autoresearch experiment is going.",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\autoresearch-agent\\skills\\status\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "behuman",
+    "description": "Use when the user wants more human-like AI responses \u2014 less robotic, less listy, more authentic. Triggers: 'behuman', 'be real', 'like a human', 'more human', 'less AI', 'talk like a person', 'mirror ",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\behuman\\skills\\behuman\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "caveman",
+    "description": "Ultra-compressed communication mode. Cuts token usage ~75% by dropping filler, articles, and pleasantries while keeping full technical accuracy. Use when user says \"caveman mode\", \"talk like caveman\",",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\caveman\\skills\\caveman\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "chaos-engineering",
+    "description": "Use when planning, running, or learning from chaos engineering experiments. Triggers on \"chaos experiment\", \"fault injection\", \"gameday\", \"resilience test\", \"blast radius\", \"steady state\", \"abort crit",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\chaos-engineering\\skills\\chaos-engineering\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "claude-coach",
+    "description": "Personal coach that teaches users to become Claude power users. Use this skill the FIRST time a user asks to \"learn Claude\", \"be a power user\", \"coach me\", \"teach me Claude tricks\", \"what can Claude d",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\claude-coach\\skills\\claude-coach\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "code-tour",
+    "description": "Use when the user asks to create a CodeTour .tour file \u2014 persona-targeted, step-by-step walkthroughs that link to real files and line numbers. Trigger for: create a tour, onboarding tour, architecture",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\code-tour\\skills\\code-tour\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "collab-proof",
+    "description": "Use when you want to understand what Claude contributed vs what you drove in a session. Triggers on: /collab-proof, session retrospective, ai contribution analysis, collaboration evidence, what did cl",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\collab-proof\\skills\\collab-proof\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "data-quality-auditor",
+    "description": "Audit datasets for completeness, consistency, accuracy, and validity. Profile data distributions, detect anomalies and outliers, surface structural issues, and produce an actionable remediation plan. ",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\data-quality-auditor\\skills\\data-quality-auditor\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "demo-video",
+    "description": "Use when the user asks to create a demo video, product walkthrough, feature showcase, animated presentation, marketing video, or GIF from screenshots or scene descriptions. Orchestrates playwright, ff",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\demo-video\\skills\\demo-video\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "docker-development",
+    "description": "Docker and container development agent skill and plugin for Dockerfile optimization, docker-compose orchestration, multi-stage builds, and container security hardening. Use when: user wants to optimiz",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\docker-development\\skills\\docker-development\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "feature-flags-architect",
+    "description": "Use when adding, retiring, or auditing feature flags. Triggers on \"add a flag\", \"ship behind a flag\", \"rollout plan\", \"kill switch\", \"stale flags\", \"flag debt\", \"LaunchDarkly\", \"GrowthBook\", \"Statsig\"",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\feature-flags-architect\\skills\\feature-flags-architect\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "grill-me",
+    "description": "Interview the user relentlessly about a plan or design until reaching shared understanding, resolving each branch of the decision tree. Use when user wants to stress-test a plan, get grilled on their ",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\grill-me\\skills\\grill-me\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "grill-with-docs",
+    "description": "Docs-anchored grilling session \u2014 challenges a plan against the project's existing language (CONTEXT.md) and recorded decisions (docs/adr/), and updates those files inline as terminology and decisions ",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\grill-with-docs\\skills\\grill-with-docs\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "handoff",
+    "description": "Compact the current conversation into a handoff document for another agent to pick up. References existing artifacts (PRDs, plans, ADRs, issues, commits, diffs) by path or URL instead of duplicating t",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\handoff\\skills\\handoff\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "helm-chart-builder",
+    "description": "Helm chart development agent skill and plugin for Claude Code, Codex, Gemini CLI, Cursor, OpenClaw \u2014 chart scaffolding, values design, template patterns, dependency management, security hardening, and",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\helm-chart-builder\\skills\\helm-chart-builder\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "karpathy-coder",
+    "description": "Use when writing, reviewing, or committing code to enforce Karpathy's 4 coding principles \u2014 surface assumptions before coding, keep it simple, make surgical changes, define verifiable goals. Triggers ",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\karpathy-coder\\skills\\karpathy-coder\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "kubernetes-operator",
+    "description": "Use when building a Kubernetes Operator \u2014 custom controllers that reconcile CRD state. Triggers on \"build an operator\", \"CRD design\", \"reconcile loop\", \"controller-runtime\", \"kubebuilder\", \"operator-s",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\kubernetes-operator\\skills\\kubernetes-operator\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "llm-cost-optimizer",
+    "description": "Use proactively whenever LLM API costs come up -- or should. Triggers include: 'my AI costs are too high', 'optimize token usage', 'which model should I use', 'LLM spend is out of control', 'implement",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\llm-cost-optimizer\\skills\\llm-cost-optimizer\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "llm-wiki",
+    "description": "Use when building or maintaining a persistent personal knowledge base (second brain) in Obsidian where an LLM incrementally ingests sources, updates entity/concept pages, maintains cross-references, a",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\llm-wiki\\skills\\llm-wiki\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "prompt-governance",
+    "description": "Use when managing prompts in production at scale: versioning prompts, running A/B tests on prompts, building prompt registries, preventing prompt regressions, or creating eval pipelines for production",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\prompt-governance\\skills\\prompt-governance\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "security-guidance",
+    "description": "PreToolUse security-anti-pattern hook for Claude Code. Catches 12 common security risks (command injection, XSS, SQL injection, unsafe deserialization, GitHub Actions workflow injection, eval/new Func",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\security-guidance\\skills\\security-guidance\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "agent-designer",
+    "description": "Use when the user asks to design a multi-agent system, pick an orchestration pattern (supervisor/swarm/pipeline), generate tool schemas for agents, or evaluate agent execution logs for cost, latency, ",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\agent-designer\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "agent-workflow-designer",
+    "description": "Design production-grade multi-agent workflows with clear pattern choice (sequential, parallel, hierarchical), handoff contracts, failure handling, and cost/context controls. Use when architecting a mu",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\agent-workflow-designer\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "api-design-reviewer",
+    "description": "Comprehensive REST API design review with automated linting, breaking-change detection, and design scorecards. Catches inconsistent conventions, missing versioning, and design smells before APIs ship.",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\api-design-reviewer\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "api-test-suite-builder",
+    "description": "Use when the user asks to generate API tests, create integration test suites, test REST endpoints, or build contract tests.",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\api-test-suite-builder\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "browser-automation",
+    "description": "Use when the user asks to automate browser tasks, scrape websites, fill forms, capture screenshots, extract structured data from web pages, or build web automation workflows. NOT for testing \u2014 use pla",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\browser-automation\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "changelog-generator",
+    "description": "Produce consistent, auditable release notes from Conventional Commits. Separates commit parsing, semantic-bump logic, and changelog rendering for automated releases with editorial control. Use when cu",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\changelog-generator\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "chaos-engineering",
+    "description": "Use when planning, running, or learning from chaos engineering experiments. Triggers on \"chaos experiment\", \"fault injection\", \"gameday\", \"resilience test\", \"blast radius\", \"steady state\", \"abort crit",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\chaos-engineering\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "ci-cd-pipeline-builder",
+    "description": "Generate pragmatic CI/CD pipelines from detected project stack signals \u2014 fast baseline generation, repeatable checks, environment-aware deployment stages. Use when setting up CI for a new project, ref",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\ci-cd-pipeline-builder\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "codebase-onboarding",
+    "description": "Analyze a codebase and generate onboarding documentation for engineers, tech leads, and contractors. Fast fact-gathering and repeatable onboarding outputs. Use when onboarding a new engineer, writing ",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\codebase-onboarding\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "database-designer",
+    "description": "Use when the user asks to design database schemas, plan data migrations, optimize queries, choose between SQL and NoSQL, or model data relationships.",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\database-designer\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "database-schema-designer",
+    "description": "Use when the user asks to create ERD diagrams, normalize database schemas, design table relationships, or plan schema migrations.",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\database-schema-designer\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "dependency-auditor",
+    "description": "Audit and manage dependencies across multi-language projects. Identifies vulnerabilities, license conflicts, transitive dependency risks, and safe-upgrade paths. Use when auditing third-party packages",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\dependency-auditor\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "engineering-advanced-skills",
+    "description": "Index of 37 advanced engineering agent skills for Claude Code, Codex, Gemini CLI, Cursor, OpenClaw. Use when browsing or choosing among the POWERFUL-tier engineering skills: agent design, RAG, MCP ser",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\engineering-advanced-skills\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "env-secrets-manager",
+    "description": "Manage environment-variable hygiene and secrets safety across local development and production. Practical auditing, drift awareness, rotation readiness. Use when auditing .env files for committed secr",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\env-secrets-manager\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "feature-flags-architect",
+    "description": "Use when adding, retiring, or auditing feature flags. Triggers on \"add a flag\", \"ship behind a flag\", \"rollout plan\", \"kill switch\", \"stale flags\", \"flag debt\", \"LaunchDarkly\", \"GrowthBook\", \"Statsig\"",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\feature-flags-architect\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "focused-fix",
+    "description": "Use when the user asks to fix, debug, or make a specific feature/module/area work end-to-end. Triggers: 'make X work', 'fix the Y feature', 'the Z module is broken', 'focus on [area]'. Not for quick s",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\focused-fix\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "full-page-screenshot",
+    "description": "Use when the user asks to capture a full-page screenshot, long screenshot, or complete page capture of a web page. Handles SPA scroll containers, lazy-loaded images, and very tall pages via Chrome Dev",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\full-page-screenshot\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "git-worktree-manager",
+    "description": "Run parallel feature work safely with Git worktrees. Standardizes branch isolation, port allocation, environment sync, and cleanup so each worktree behaves like an independent local app. Optimized for",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\git-worktree-manager\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "interview-system-designer",
+    "description": "This skill should be used when the user asks to \"design interview processes\", \"create hiring pipelines\", \"calibrate interview loops\", \"generate interview questions\", \"design competency matrices\", \"ana",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\interview-system-designer\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "kubernetes-operator",
+    "description": "Use when building a Kubernetes Operator \u2014 custom controllers that reconcile CRD state. Triggers on \"build an operator\", \"CRD design\", \"reconcile loop\", \"controller-runtime\", \"kubebuilder\", \"operator-s",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\kubernetes-operator\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "mcp-server-builder",
+    "description": "Design and ship production-ready MCP (Model Context Protocol) servers from OpenAPI contracts instead of hand-written tool wrappers. Python and TypeScript support, schema validation, safe evolution. Us",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\mcp-server-builder\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "migration-architect",
+    "description": "Zero-downtime migration planning, compatibility validation, and rollback strategy generation. Tools for system, database, and infrastructure migrations with minimal business impact. Use when planning ",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\migration-architect\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "monorepo-navigator",
+    "description": "Navigate, manage, and optimize monorepos. Covers Turborepo, Nx, pnpm workspaces, and Lerna. Cross-package impact analysis, selective builds/tests on affected packages, remote caching, dependency graph",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\monorepo-navigator\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "observability-designer",
+    "description": "Design production-ready observability strategies combining metrics, logs, and traces. Includes SLI/SLO design, golden-signals monitoring, alert optimization. Use when adding observability to a new ser",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\observability-designer\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "performance-profiler",
+    "description": "Systematic performance profiling for Node.js, Python, and Go applications. Identifies CPU, memory, and I/O bottlenecks, generates flamegraphs, analyzes bundle sizes, optimizes database queries, runs l",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\performance-profiler\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "pr-review-expert",
+    "description": "Use when the user asks to review pull requests, analyze code changes, check for security issues in PRs, or assess code quality of diffs.",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\pr-review-expert\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "rag-architect",
+    "description": "Use when the user asks to design a RAG pipeline, choose a chunking strategy or embedding model, pick a vector database, or evaluate retrieval quality (precision@k, recall@k, NDCG). Examples: 'design a",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\rag-architect\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "runbook-generator",
+    "description": "Generate operational runbooks from a service name \u2014 deployment, incident response, maintenance, and rollback workflows. Templated structure customizable per environment. Use when documenting on-call p",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\runbook-generator\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "secrets-vault-manager",
+    "description": "Use when the user asks to set up secret management infrastructure, integrate HashiCorp Vault, configure cloud secret stores (AWS Secrets Manager, Azure Key Vault, GCP Secret Manager), implement secret",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\secrets-vault-manager\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "self-eval",
+    "description": "Honestly evaluate AI work quality using a two-axis scoring system. Use after completing a task, code review, or work session to get an unbiased assessment. Detects score inflation, forces devil's advo",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\self-eval\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "ship-gate",
+    "description": "Pre-production audit that scans a codebase for security, database, deployment, code quality, AI/LLM, dependency, frontend, and observability issues. Intercepts deploy commands and blocks until critica",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\ship-gate\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "skill-security-auditor",
+    "description": "Security audit and vulnerability scanner for AI agent skills before installation. Use when: (1) evaluating a skill from an untrusted source, (2) auditing a skill directory or git repo URL for maliciou",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\skill-security-auditor\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "skill-tester",
+    "description": "Validate, test, and score the quality of skills within the claude-skills ecosystem. Comprehensive meta-skill: structure validation, Python script testing (syntax + imports + runtime + output format), ",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\skill-tester\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "slo-architect",
+    "description": "Use when defining, reviewing, or operating SLOs/SLIs/error budgets. Triggers on \"define an SLO\", \"what should our SLO be\", \"error budget\", \"burn rate\", \"SLI\", \"service level objective\", \"Google SRE wo",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\slo-architect\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "spec-driven-workflow",
+    "description": "Use when the user asks to write specs before code, define acceptance criteria, plan features before implementation, generate tests from specifications, or follow spec-first development practices.",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\spec-driven-workflow\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "sql-database-assistant",
+    "description": "Use when the user asks to write SQL queries, optimize database performance, generate migrations, explore database schemas, or work with ORMs like Prisma, Drizzle, TypeORM, or SQLAlchemy.",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\sql-database-assistant\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "tc-tracker",
+    "description": "Use when the user asks to track technical changes, create change records, manage TC lifecycles, or hand off work between AI sessions. Covers init/create/update/status/resume/close/export workflows for",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\tc-tracker\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "tech-debt-tracker",
+    "description": "Scan codebases for technical debt, score severity, track trends, and generate prioritized remediation plans. Use when users mention tech debt, code quality, refactoring priority, debt scoring, cleanup",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\skills\\tech-debt-tracker\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "slo-architect",
+    "description": "Use when defining, reviewing, or operating SLOs/SLIs/error budgets. Triggers on \"define an SLO\", \"what should our SLO be\", \"error budget\", \"burn rate\", \"SLI\", \"service level objective\", \"Google SRE wo",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\slo-architect\\skills\\slo-architect\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "statistical-analyst",
+    "description": "Run hypothesis tests, analyze A/B experiment results, calculate sample sizes, and interpret statistical significance with effect sizes. Use when you need to validate whether observed differences are r",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\statistical-analyst\\skills\\statistical-analyst\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "terraform-patterns",
+    "description": "Terraform infrastructure-as-code agent skill and plugin for Claude Code, Codex, Gemini CLI, Cursor, OpenClaw. Covers module design patterns, state management strategies, provider configuration, securi",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\terraform-patterns\\skills\\terraform-patterns\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "universal-scraping-architect",
+    "description": "Use for web scraping, crawling, document extraction, API parsing, or building validation-heavy data pipelines using Firecrawl or local Python scripts.",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\universal-scraping-architect\\skills\\universal-scraping-architect\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "workflow-builder",
+    "description": "Design and write deterministic multi-agent workflow scripts (.js files in .claude/workflows/) for Claude Code's Workflow tool. Use when a user wants to build, create, author, scaffold, or run a custom",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\workflow-builder\\skills\\workflow-builder\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "write-a-skill",
+    "description": "Create new agent skills with proper structure, progressive disclosure, and bundled resources. Use when user wants to create, write, build, or author a new skill.",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering\\write-a-skill\\skills\\write-a-skill\\SKILL.md",
+    "domain": "engineering"
+  },
+  {
+    "name": "a11y-audit",
+    "description": "Accessibility audit skill for scanning, fixing, and verifying WCAG 2.2 Level A and AA compliance across React, Next.js, Vue, Angular, Svelte, and plain HTML codebases. Use when auditing accessibility,",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\a11y-audit\\skills\\a11y-audit\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "google-workspace-cli",
+    "description": "Google Workspace administration via the gws CLI (github.com/googleworkspace/cli). Install, authenticate, and automate Gmail, Drive, Sheets, Calendar, Docs, Chat, and Tasks. Run security audits and use",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\google-workspace-cli\\skills\\google-workspace-cli\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "browserstack",
+    "description": "Run tests on BrowserStack. Use when user mentions \"browserstack\", \"cross-browser\", \"cloud testing\", \"browser matrix\", \"test on safari\", \"test on firefox\", or \"browser compatibility\".",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\playwright-pro\\skills\\browserstack\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "coverage",
+    "description": "Analyze test coverage gaps. Use when user says \"test coverage\", \"what's not tested\", \"coverage gaps\", \"missing tests\", \"coverage report\", or \"what needs testing\".",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\playwright-pro\\skills\\coverage\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "fix",
+    "description": "Fix failing or flaky Playwright tests. Use when user says \"fix test\", \"flaky test\", \"test failing\", \"debug test\", \"test broken\", \"test passes sometimes\", or \"intermittent failure\".",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\playwright-pro\\skills\\fix\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "generate",
+    "description": "Generate Playwright tests. Use when user says \"write tests\", \"generate tests\", \"add tests for\", \"test this component\", \"e2e test\", \"create test for\", \"test this page\", or \"test this feature\".",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\playwright-pro\\skills\\generate\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "init",
+    "description": "Set up Playwright in a project. Use when user says \"set up playwright\", \"add e2e tests\", \"configure playwright\", \"testing setup\", \"init playwright\", or \"add test infrastructure\".",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\playwright-pro\\skills\\init\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "migrate",
+    "description": "Migrate from Cypress or Selenium to Playwright. Use when user mentions \"cypress\", \"selenium\", \"migrate tests\", \"convert tests\", \"switch to playwright\", \"move from cypress\", or \"replace selenium\".",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\playwright-pro\\skills\\migrate\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "playwright-pro",
+    "description": "Production-grade Playwright testing toolkit. Use when the user mentions Playwright tests, end-to-end testing, browser automation, fixing flaky tests, test migration, CI/CD testing, or test suites. Gen",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\playwright-pro\\skills\\pw\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "report",
+    "description": "Generate test report. Use when user says \"test report\", \"results summary\", \"test status\", \"show results\", \"test dashboard\", or \"how did tests go\".",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\playwright-pro\\skills\\report\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "review",
+    "description": "Review Playwright tests for quality. Use when user says \"review tests\", \"check test quality\", \"audit tests\", \"improve tests\", \"test code review\", or \"playwright best practices check\".",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\playwright-pro\\skills\\review\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "testrail",
+    "description": "Sync tests with TestRail. Use when user mentions \"testrail\", \"test management\", \"test cases\", \"test run\", \"sync test cases\", \"push results to testrail\", or \"import from testrail\".",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\playwright-pro\\skills\\testrail\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "extract",
+    "description": "Turn a proven pattern or debugging solution into a standalone reusable skill with SKILL.md, reference docs, and examples. Use when the user runs /si:extract or asks to package a recurring solution fro",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\self-improving-agent\\skills\\extract\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "promote",
+    "description": "Graduate a proven pattern from auto-memory (MEMORY.md) to CLAUDE.md or .claude/rules/ for permanent enforcement. Use when the user runs /si:promote or asks to make a learned behavior permanent.",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\self-improving-agent\\skills\\promote\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "remember",
+    "description": "Explicitly save important knowledge to auto-memory with timestamp and context. Use when a discovery is too important to rely on auto-capture.",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\self-improving-agent\\skills\\remember\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "review",
+    "description": "Analyze auto-memory for promotion candidates, stale entries, consolidation opportunities, and health metrics. Use when the user runs /si:review or asks what has been learned and what should be promote",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\self-improving-agent\\skills\\review\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "self-improving-agent",
+    "description": "Curate Claude Code's auto-memory into durable project knowledge. Analyze MEMORY.md for patterns, promote proven learnings to CLAUDE.md and .claude/rules/, extract recurring solutions into reusable ski",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\self-improving-agent\\skills\\self-improving-agent\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "status",
+    "description": "Memory health dashboard showing line counts, topic files, capacity, stale entries, and recommendations. Use when the user runs /si:status or asks how full or healthy the agent memory is.",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\self-improving-agent\\skills\\status\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "adversarial-reviewer",
+    "description": "Adversarial code review that breaks the self-review monoculture. Use when you want a genuinely critical review of recent changes, before merging a PR, or when you suspect Claude is being too agreeable",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\adversarial-reviewer\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "ai-security",
+    "description": "Use when assessing AI/ML systems for prompt injection, jailbreak vulnerabilities, model inversion risk, data poisoning exposure, or agent tool abuse. Covers MITRE ATLAS technique mapping, injection si",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\ai-security\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "aws-solution-architect",
+    "description": "Design AWS architectures for startups using serverless patterns and IaC templates. Use when asked to design serverless architecture, create CloudFormation templates, optimize AWS costs, set up CI/CD p",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\aws-solution-architect\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "azure-cloud-architect",
+    "description": "Design Azure architectures for startups and enterprises. Use when asked to design Azure infrastructure, create Bicep/ARM templates, optimize Azure costs, set up Azure DevOps pipelines, or migrate to A",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\azure-cloud-architect\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "cloud-security",
+    "description": "Use when assessing cloud infrastructure for security misconfigurations, IAM privilege escalation paths, S3 public exposure, open security group rules, or IaC security gaps. Covers AWS, Azure, and GCP ",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\cloud-security\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "code-reviewer",
+    "description": "Code review automation for TypeScript, JavaScript, Python, Go, Swift, Kotlin, C#, .NET, Java, C, C++, Rust, Ruby, PHP, and Dart/Flutter. Analyzes PRs for complexity and risk, checks code quality for S",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\code-reviewer\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "email-template-builder",
+    "description": "Build complete transactional email systems: React Email templates, provider integration (Resend, Postmark, SendGrid, AWS SES), preview server, i18n support, dark mode, spam optimization, analytics tra",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\email-template-builder\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "engineering-skills",
+    "description": "Index of the engineering-team skills bundle for Claude Code, Codex, Gemini CLI, Cursor, OpenClaw, and 6 more tools. Architecture, frontend, backend, QA, DevOps, security, AI/ML, data engineering, Play",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\engineering-skills\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "epic-design",
+    "description": "Build immersive, cinematic 2.5D interactive websites using scroll storytelling, parallax depth, text animations, and premium scroll effects \u2014 no WebGL required. Use this skill for any web design task:",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\epic-design\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "gcp-cloud-architect",
+    "description": "Design GCP architectures for startups and enterprises. Use when asked to design Google Cloud infrastructure, deploy to GKE or Cloud Run, configure BigQuery pipelines, optimize GCP costs, or migrate to",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\gcp-cloud-architect\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "incident-commander",
+    "description": "Comprehensive incident response framework from detection through resolution and post-incident review. Battle-tested SRE/DevOps practices: severity classification, timeline reconstruction, structured p",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\incident-commander\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "incident-response",
+    "description": "Use when a security incident has been detected or declared and needs classification, triage, escalation path determination, and forensic evidence collection. Covers SEV1-SEV4 classification, false pos",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\incident-response\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "ms365-tenant-manager",
+    "description": "Microsoft 365 tenant administration for Global Administrators. Automate M365 tenant setup, Office 365 admin tasks, Azure AD user management, Exchange Online configuration, Teams administration, and se",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\ms365-tenant-manager\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "red-team",
+    "description": "Use when planning or executing authorized red team engagements, attack path analysis, or offensive security simulations. Covers MITRE ATT&CK kill-chain planning, technique scoring, choke point identif",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\red-team\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "security-pen-testing",
+    "description": "Use when the user asks to perform security audits, penetration testing, vulnerability scanning, OWASP Top 10 checks, or offensive security assessments. Covers static analysis, dependency scanning, sec",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\security-pen-testing\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "senior-architect",
+    "description": "This skill should be used when the user asks to \"design system architecture\", \"evaluate microservices vs monolith\", \"create architecture diagrams\", \"analyze dependencies\", \"choose a database\", \"plan f",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\senior-architect\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "senior-backend",
+    "description": "Designs and implements backend systems including REST APIs, microservices, database architectures, authentication flows, and security hardening. Use when the user asks to \"design REST APIs\", \"optimize",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\senior-backend\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "senior-computer-vision",
+    "description": "Computer vision engineering skill for object detection, image segmentation, and visual AI systems. Covers CNN and Vision Transformer architectures, YOLO/Faster R-CNN/DETR detection, Mask R-CNN/SAM seg",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\senior-computer-vision\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "senior-data-engineer",
+    "description": "Data engineering skill for building scalable data pipelines, ETL/ELT systems, and data infrastructure. Expertise in Python, SQL, Spark, Airflow, dbt, Kafka, and modern data stack. Includes data modeli",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\senior-data-engineer\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "senior-data-scientist",
+    "description": "World-class senior data scientist skill specialising in statistical modeling, experiment design, causal inference, and predictive analytics. Covers A/B testing (sample sizing, two-proportion z-tests, ",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\senior-data-scientist\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "senior-devops",
+    "description": "Comprehensive DevOps skill for CI/CD, infrastructure automation, containerization, and cloud platforms (AWS, GCP, Azure). Includes pipeline setup, infrastructure as code, deployment automation, and mo",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\senior-devops\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "senior-frontend",
+    "description": "Frontend development skill for React, Next.js, TypeScript, and Tailwind CSS applications. Use when building React components, optimizing Next.js performance, analyzing bundle sizes, scaffolding fronte",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\senior-frontend\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "senior-fullstack",
+    "description": "Fullstack development toolkit with project scaffolding for Next.js, FastAPI, MERN, and Django stacks, code quality analysis with security and complexity scoring, and stack selection guidance. Use when",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\senior-fullstack\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "senior-ml-engineer",
+    "description": "ML engineering skill for productionizing models, building MLOps pipelines, and integrating LLMs. Covers model deployment, feature stores, drift monitoring, RAG systems, and cost optimization. Use when",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\senior-ml-engineer\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "senior-prompt-engineer",
+    "description": "Use when the user asks to optimize prompts, design prompt templates, evaluate LLM outputs with an eval set, measure RAG retrieval quality, validate agent/tool configurations, analyze token usage, or d",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\senior-prompt-engineer\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "senior-qa",
+    "description": "Generates unit tests, integration tests, and E2E tests for React/Next.js applications. Scans components to create Jest + React Testing Library test stubs, analyzes Istanbul/LCOV coverage reports to su",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\senior-qa\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "senior-secops",
+    "description": "Senior SecOps engineer skill for application security, vulnerability management, compliance verification, and secure development practices. Runs SAST/DAST scans, generates CVE remediation plans, check",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\senior-secops\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "senior-security",
+    "description": "Use when the user asks for STRIDE threat modeling, DREAD risk scoring, data-flow-diagram threat analysis, or a quick secret scan \u2014 or when a security request needs routing to the right specialist skil",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\senior-security\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "stripe-integration-expert",
+    "description": "Production-grade Stripe integrations: subscriptions with trials and proration, one-time payments, usage-based billing, checkout sessions, idempotent webhook handlers, customer portal, and invoicing. C",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\stripe-integration-expert\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "tdd-guide",
+    "description": "Test-driven development skill for writing unit tests, generating test fixtures and mocks, analyzing coverage gaps, and guiding red-green-refactor workflows across Jest, Pytest, JUnit, Vitest, and Moch",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\tdd-guide\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "tech-stack-evaluator",
+    "description": "Technology stack evaluation and comparison with TCO analysis, security assessment, and ecosystem health scoring. Use when comparing frameworks, evaluating technology stacks, calculating total cost of ",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\tech-stack-evaluator\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "threat-detection",
+    "description": "Use when hunting for threats in an environment, analyzing IOCs, or detecting behavioral anomalies in telemetry. Covers hypothesis-driven threat hunting, IOC sweep generation, z-score anomaly detection",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\skills\\threat-detection\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "snowflake-development",
+    "description": "Use when writing Snowflake SQL, building data pipelines with Dynamic Tables or Streams/Tasks, using Cortex AI functions, creating Cortex Agents, writing Snowpark Python, configuring dbt for Snowflake,",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\engineering-team\\snowflake-development\\skills\\snowflake-development\\SKILL.md",
+    "domain": "engineering-team"
+  },
+  {
+    "name": "andreessen",
+    "description": "Marc Andreessen-mode decision and productivity skill. A blunt, market-first operator that pressure-tests ideas, ventures, features, and career bets through Andreessen's actual frameworks \u2014 market domi",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\productivity\\andreessen\\skills\\andreessen\\SKILL.md",
+    "domain": "productivity"
+  },
+  {
+    "name": "capture",
+    "description": "Captures and organizes chaotic brain dumps into a structured, actionable system with zero information loss. Use this skill whenever the user says 'capture this', 'brain dump', 'let me dump some ideas'",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\productivity\\capture\\skills\\capture\\SKILL.md",
+    "domain": "productivity"
+  },
+  {
+    "name": "inbox-setup",
+    "description": "One-time setup skill that builds a personalized inbox triage knowledge base via interactive interview. Interviews the user about their email patterns, business context, reply style, and priorities usi",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\productivity\\email\\skills\\inbox-setup\\SKILL.md",
+    "domain": "productivity"
+  },
+  {
+    "name": "inbox-triage",
+    "description": "Runs a full inbox triage using the knowledge base created by the 'inbox-setup' skill. Light-intake by design (most invocations skip questions and run with KB-default preferences); asks at most 2 grill",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\productivity\\email\\skills\\inbox-triage\\SKILL.md",
+    "domain": "productivity"
+  },
+  {
+    "name": "handoff",
+    "description": "Compact the current conversation into a handoff document for another agent to pick up. Save to a user-configured location (OS temp, home folder, or per-project .handoff/), redact secrets before write,",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\productivity\\handoff\\skills\\handoff\\SKILL.md",
+    "domain": "productivity"
+  },
+  {
+    "name": "reflect",
+    "description": "Mid-conversation reflection skill that pauses execution and zooms out from detail-mode to honestly reassess direction, assumptions, and bias. Use when the user says 'reflect', 'take a step back', 'ste",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\productivity\\reflect\\skills\\reflect\\SKILL.md",
+    "domain": "productivity"
+  },
+  {
+    "name": "dossier",
+    "description": "Decision-grade entity research skill \u2014 produces a hypothesis-tested dossier on a specific company, person, nonprofit, or government org, not a generic profile. Forcing intake makes the user state thei",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\research\\dossier\\skills\\dossier\\SKILL.md",
+    "domain": "research"
+  },
+  {
+    "name": "grants",
+    "description": "NIH grant research skill for clinical researchers. Grill-me intake (research idea + career stage + preliminary data + environment + submission posture + known institute targets) locks down the funding",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\research\\grants\\skills\\grants\\SKILL.md",
+    "domain": "research"
+  },
+  {
+    "name": "litreview",
+    "description": "Academic literature orientation skill that searches papers via Consensus, builds a strategic search plan using PICO (default) or SPIDER / Decomposition / hybrid as fallbacks, and synthesizes findings ",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\research\\litreview\\skills\\litreview\\SKILL.md",
+    "domain": "research"
+  },
+  {
+    "name": "notebooklm",
+    "description": "Browser automation skill for controlling Google's NotebookLM. Use when the user wants anything done in NotebookLM (e.g., 'open NotebookLM', 'check my [name] notebook', 'ask my notebook about X', 'add ",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\research\\notebooklm\\skills\\notebooklm\\SKILL.md",
+    "domain": "research"
+  },
+  {
+    "name": "patent",
+    "description": "Patent prior-art and landscape intelligence skill \u2014 not generic patent help. Commits to one of five sub-use-cases via forcing intake (novelty search / freedom-to-operate / competitive landscape / acqu",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\research\\patent\\skills\\patent\\SKILL.md",
+    "domain": "research"
+  },
+  {
+    "name": "pulse",
+    "description": "Multi-source recency research skill that takes the pulse of any topic across Reddit, Hacker News, the open web, and optionally X/Twitter within a configurable recent window (default 30 days). Forcing ",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\research\\pulse\\skills\\pulse\\SKILL.md",
+    "domain": "research"
+  },
+  {
+    "name": "research",
+    "description": "Default entry point for any research request \u2014 a hybrid router that classifies the question deterministically and either delegates to a specialist research skill (pulse for trends/sentiment, grants fo",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\research\\research\\skills\\research\\SKILL.md",
+    "domain": "research"
+  },
+  {
+    "name": "syllabus",
+    "description": "Generates a curated supplementary reading list from any course syllabus using Consensus academic search. Grill-me intake (syllabus input format + course audience + year range) plus a grouping forcing-",
+    "path": "E:\\KLAUSE\\data\\cloned_skills_repo\\research\\syllabus\\skills\\syllabus\\SKILL.md",
+    "domain": "research"
+  }
+]

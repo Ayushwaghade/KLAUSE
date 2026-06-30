@@ -1,0 +1,76 @@
+import pytest
+from unittest.mock import MagicMock, patch
+from app.voice.tts import truncate_sentences, TTSEngine
+from app.voice.voice_manager import VoiceManager
+
+def test_truncate_sentences():
+    """
+    Verify sentence split and truncation helper works correctly.
+    """
+    text = "Hello world. This is KLAUSE. How are you? Nice day."
+    res = truncate_sentences(text, max_sentences=2)
+    assert "Hello world. This is KLAUSE." in res
+    assert "Nice day" not in res
+    
+    # Check limit boundaries
+    assert truncate_sentences("Hello.", 3) == "Hello."
+
+@patch("win32com.client.Dispatch")
+@patch("threading.Thread")
+def test_get_best_voice_fallback(mock_thread, mock_dispatch):
+    """
+    Verify voice enumeration falls back correctly.
+    """
+    mock_sapi = MagicMock()
+    mock_voices = MagicMock()
+    
+    v1 = MagicMock()
+    v1.GetDescription.return_value = "Microsoft Zira Desktop"
+    v2 = MagicMock()
+    v2.GetDescription.return_value = "Microsoft David Desktop"
+    
+    mock_voices.Count = 2
+    mock_voices.Item.side_effect = [v1, v2]
+    mock_sapi.GetVoices.return_value = mock_voices
+    mock_dispatch.return_value = mock_sapi
+    
+    engine = TTSEngine()
+    assert engine.sapi_voice is not None
+    mock_sapi.Voice = v2
+
+@patch("win32com.client.Dispatch")
+@patch("threading.Thread")
+def test_speak_queue_clean_text(mock_thread, mock_dispatch):
+    """
+    Verify speak cleans markdown characters before queueing.
+    """
+    mock_sapi = MagicMock()
+    mock_dispatch.return_value = mock_sapi
+    
+    # Mock GetVoices Count to avoid comparison exceptions
+    mock_voices = MagicMock()
+    mock_voices.Count = 0
+    mock_sapi.GetVoices.return_value = mock_voices
+    
+    engine = TTSEngine()
+    engine.is_active = True # Force active to ensure speak queues the cleaned text
+    
+    engine.speak("**Hello** `KLAUSE`!")
+    
+    txt = engine.queue.get_nowait()
+    assert txt == "Hello KLAUSE!"
+
+@patch("app.voice.voice_manager.settings")
+def test_voice_manager_init(mock_settings):
+    """
+    Verify voice manager settings are loaded.
+    """
+    mock_settings.voice.enabled = False
+    mock_settings.voice.trigger_mode = "push_to_talk"
+    mock_settings.voice.hotkey = "ctrl+space"
+    
+    with patch("app.voice.tts.HAS_WIN32", False):
+        manager = VoiceManager()
+        assert manager.enabled is False
+        assert manager.trigger_mode == "push_to_talk"
+        assert manager.hotkey == "ctrl+space"
