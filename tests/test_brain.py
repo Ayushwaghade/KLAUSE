@@ -63,7 +63,9 @@ def test_brain_react_loop():
         brain.is_connected = True
         brain.client = mock_gemini_client
         
-        response = brain.think("Create file test.txt containing hello")
+        # Patch skill detection so it doesn't consume a mock response
+        with patch.object(brain, '_maybe_load_relevant_skill', return_value=""):
+            response = brain.think("Create file test.txt containing hello")
         
         assert response == "I successfully created the file test.txt."
         mock_dispatcher.execute.assert_called_once_with("write_file", {"path": "test.txt", "content": "hello"})
@@ -93,7 +95,9 @@ def test_brain_self_healing_parameters():
         brain.is_connected = True
         brain.client = mock_gemini_client
         
-        response = brain.think("Create file test.txt containing hello")
+        # Patch skill detection so it doesn't consume a mock response
+        with patch.object(brain, '_maybe_load_relevant_skill', return_value=""):
+            response = brain.think("Create file test.txt containing hello")
         
         assert response == "Finished"
         mock_dispatcher.execute.assert_called_once_with("write_file", {"path": "test.txt", "content": "hello"})

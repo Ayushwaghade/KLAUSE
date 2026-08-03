@@ -1,0 +1,9 @@
+{
+	"nodes":[
+		{"id":"d02922aee8bbd75e","type":"file","file":"Untitled.canvas","x":1600,"y":-565,"width":400,"height":415},
+		{"id":"97eb64fbb2b10296","type":"file","file":"Untitled.base","x":1040,"y":-550,"width":400,"height":400}
+	],
+	"edges":[
+		{"id":"5a2de0f1bb27e81c","fromNode":"d02922aee8bbd75e","fromSide":"bottom","toNode":"97eb64fbb2b10296","toSide":"bottom"}
+	]
+}

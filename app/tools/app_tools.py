@@ -3,6 +3,7 @@ import subprocess
 from loguru import logger
 from app.tools.base import tool
 from app.config.config import settings
+from app.core.context import context
 
 @tool(
     name="open_application",
@@ -41,3 +42,24 @@ def open_application(app_key: str) -> str:
     except Exception as e:
         logger.error(f"Failed to launch application '{app_key}': {e}")
         return f"Error: Failed to launch application '{app_key}': {e}"
+
+
+@tool(
+    name="request_user_confirmation",
+    description="Ask the user for explicit confirmation or permission to perform an action. Returns 'User approved: Yes' or 'User approved: No'. Use this before critical or destructive actions, or if rules mandate user approval.",
+    destructive=False
+)
+def request_user_confirmation(prompt: str) -> str:
+    """
+    Suspends KLAUSE's thread execution and triggers a modal dialog on the user's UI.
+    """
+    session_id = context.session_id
+    logger.info(f"Requesting user confirmation for session {session_id}: {prompt}")
+    
+    approved = context.request_confirmation(session_id, prompt)
+    
+    if approved:
+        return "User approved: Yes"
+    else:
+        return "User approved: No"
+

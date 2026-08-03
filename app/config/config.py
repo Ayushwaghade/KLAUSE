@@ -9,6 +9,7 @@ class KlauseSettings(BaseModel):
     name: str = "KLAUSE"
     version: str = "0.1.0"
     wake_word: str = "klause"
+    personality: str = "supportive"
 
 class AISettings(BaseModel):
     gemini_model: str = "gemini-3.1-flash-lite-preview"
@@ -42,11 +43,20 @@ class PathSettings(BaseModel):
     projects: str = "./projects"
     logs: str = "./logs"
 
-class InstagramSettings(BaseModel):
-    username: str = ""
-    password: str = ""
-    max_likes: int = 10
-    max_follows: int = 5
+class StateMachineSettings(BaseModel):
+    enabled: bool = True
+    capture_clipboard: bool = True
+    max_visible_windows: int = 10
+
+class BrowserSettings(BaseModel):
+    prefer: str = "chrome"  # chrome | brave | msedge | firefox
+    profile_directory: Optional[str] = None  # e.g., "Default" or "Profile 1"
+
+class AutomationSettings(BaseModel):
+    enabled: bool = True
+    polling_interval_seconds: float = 0.5
+    debounce_interval_seconds: float = 0.3
+    max_rules: int = 50
 
 class AppConfig(BaseSettings):
     klause: KlauseSettings = KlauseSettings()
@@ -54,7 +64,9 @@ class AppConfig(BaseSettings):
     memory: MemorySettings = MemorySettings()
     voice: VoiceSettings = VoiceSettings()
     paths: PathSettings = PathSettings()
-    instagram: InstagramSettings = InstagramSettings()
+    state_machine: StateMachineSettings = StateMachineSettings()
+    automation: AutomationSettings = AutomationSettings()
+    browser: BrowserSettings = BrowserSettings()
     allowed_applications: dict[str, str] = Field(default_factory=dict)
     google_search_api_key: Optional[str] = Field(None, validation_alias="GOOGLE_SEARCH_API_KEY")
     google_search_cx: Optional[str] = Field(None, validation_alias="GOOGLE_SEARCH_CX")

@@ -1,0 +1,221 @@
+{
+  "main": {
+    "id": "4697c693a2b7e838",
+    "type": "split",
+    "children": [
+      {
+        "id": "7dceee4ab2e2ea69",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "ae5e8fce2163f5df",
+            "type": "leaf",
+            "state": {
+              "type": "canvas",
+              "state": {
+                "file": "Untitled.canvas",
+                "viewState": {
+                  "x": -253.3999481201172,
+                  "y": -1874.7625222435709,
+                  "zoom": -3.333333333333333
+                }
+              },
+              "icon": "lucide-layout-dashboard",
+              "title": "Untitled"
+            }
+          },
+          {
+            "id": "8c94898c8f519839",
+            "type": "leaf",
+            "state": {
+              "type": "canvas",
+              "state": {
+                "file": "KLAUSE_Connections.canvas",
+                "viewState": {
+                  "x": 110,
+                  "y": 30.00000000000003,
+                  "zoom": -0.3582193672789992
+                }
+              },
+              "icon": "lucide-layout-dashboard",
+              "title": "KLAUSE_Connections"
+            }
+          }
+        ],
+        "currentTab": 1
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "8e9047044753b2e1",
+    "type": "split",
+    "children": [
+      {
+        "id": "6acc628a2ad19845",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "6306089436f433d3",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": true
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "3f2c9f1dab490a68",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "6704eb7d719bdbe0",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "e619ba979d044776",
+    "type": "split",
+    "children": [
+      {
+        "id": "505d56fbcc1433fe",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "461912d256990f49",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Untitled 1.md",
+                "collapseAll": true,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": true,
+                "unlinkedCollapsed": false
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for Untitled 1"
+            }
+          },
+          {
+            "id": "1539430c2e911e2a",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Untitled 1.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from Untitled 1"
+            }
+          },
+          {
+            "id": "0a19846615546367",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "a2fa71f6196b9d70",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "8de9a54cde95c7c3",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "KLAUSE_Connections.canvas",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of KLAUSE_Connections"
+            }
+          }
+        ],
+        "currentTab": 4
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "8c94898c8f519839",
+  "lastOpenFiles": [
+    "The_capital_of_France_is_Paris..md",
+    "KLAUSE_Connections.canvas",
+    "Untitled.canvas",
+    "Untitled.md",
+    "Untitled 1.md",
+    "Untitled",
+    "Untitled.base",
+    "Vector_Search_Architectures_40.md",
+    "Vector_Search_Architectures_10.md",
+    "The_capital_of_France_is_Paris._52.md",
+    "The_capital_of_France_is_Paris._6.md"
+  ]
+}

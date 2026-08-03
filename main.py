@@ -7,7 +7,10 @@ from rich.console import Console
 from rich.panel import Panel
 from app.config.config import settings
 from app.core.logging_setup import setup_logging
+from loguru import logger
 from app.core.brain import Brain
+from app.core.context import context
+from app.core.state_machine import state_machine
 from app.voice.voice_manager import VoiceManager, voice_input_queue
 from app.voice.voice_typer import LiveVoiceTyper
 
@@ -21,10 +24,20 @@ session_id = str(uuid.uuid4())
 # Initialize Voice Manager
 voice_manager = VoiceManager()
 voice_manager.start()
+context.voice_active = voice_manager.enabled
+
+logger.info("State machine initialized") if state_machine else None
 
 # Initialize and start Live Voice Typer
 voice_typer = LiveVoiceTyper()
 voice_typer.start()
+
+from app.automation.event_engine import event_engine
+from app.automation.scheduler import scheduler
+
+# Start Event Engine & Scheduler
+event_engine.start()
+scheduler.start()
 
 text_input_queue = queue.Queue()
 
@@ -43,6 +56,31 @@ def console_reader():
             break
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="KLAUSE desktop runtime")
+    parser.add_argument("--server", action="store_true", help="Launch backend FastAPI service layer")
+    args = parser.parse_args()
+
+    if args.server:
+        console.print(Panel.fit(
+            f"[bold green]KLAUSE Server Mode[/bold green]\n"
+            f"Local server token initialized in data/.server_token.\n"
+            f"FastAPI endpoints running at: [bold cyan]http://localhost:8000[/bold cyan]\n"
+            f"Press [bold red]Ctrl+C[/bold red] to stop.",
+            title="[bold cyan]System Booted[/bold cyan]",
+            border_style="cyan"
+        ))
+        from app.api.server import start_server
+        try:
+            start_server()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            console.print("\n[bold yellow]Shutting down KLAUSE Server. Goodbye![/bold yellow]")
+            event_engine.stop()
+            scheduler.stop()
+        return
+
     console.print(Panel.fit(
         f"[bold green]KLAUSE {settings.klause.version}[/bold green] — Personal AI Engineering Assistant\n"
         f"Session ID: [bold yellow]{session_id}[/bold yellow]\n"
@@ -78,6 +116,8 @@ def main():
                 if user_input.lower() in ("exit", "quit"):
                     console.print("[bold yellow]Shutting down KLAUSE. Goodbye![/bold yellow]")
                     voice_typer.stop()
+                    event_engine.stop()
+                    scheduler.stop()
                     break
                     
                 response = brain.think(user_input, session_id=session_id)
@@ -94,6 +134,8 @@ def main():
             console.print("\n[bold yellow]Session interrupted. Goodbye![/bold yellow]")
             voice_typer.stop()
             voice_manager.stop_speaking()
+            event_engine.stop()
+            scheduler.stop()
             sys.exit(0)
         except Exception as e:
             console.print(f"[bold red]System Error:[/bold red] {e}")

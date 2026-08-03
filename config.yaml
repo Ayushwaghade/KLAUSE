@@ -2,6 +2,7 @@ klause:
   name: KLAUSE
   version: 0.1.0
   wake_word: "klause"
+  personality: "hacker"
 
 ai:
   gemini_model: gemini-3.1-flash-lite-preview
@@ -50,9 +51,17 @@ allowed_applications:
   chrome: "C:/Program Files/Google/Chrome/Application/chrome.exe"
   brave: "C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe"
 
-instagram:
-  username: ""
-  password: ""
-  max_likes: 10
-  max_follows: 5
+state_machine:
+  enabled: true
+  capture_clipboard: true
+  max_visible_windows: 10
 
+automation:
+  enabled: true
+  polling_interval_seconds: 0.5
+  debounce_interval_seconds: 0.3
+  max_rules: 50
+
+browser:
+  prefer: brave
+  profile_directory: "Default"  # Specify your main profile directory (e.g. "Default", "Profile 1") to bypass the profile picker screen

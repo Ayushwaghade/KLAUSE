@@ -60,6 +60,33 @@ def test_speak_queue_clean_text(mock_thread, mock_dispatch):
     txt = engine.queue.get_nowait()
     assert txt == "Hello KLAUSE!"
 
+@patch("win32com.client.Dispatch")
+@patch("threading.Thread")
+def test_speak_strips_task_complete(mock_thread, mock_dispatch):
+    """
+    Verify speak strips 'Task complete' variations and avoids speaking empty strings.
+    """
+    mock_sapi = MagicMock()
+    mock_dispatch.return_value = mock_sapi
+    mock_voices = MagicMock()
+    mock_voices.Count = 0
+    mock_sapi.GetVoices.return_value = mock_voices
+    
+    engine = TTSEngine()
+    engine.is_active = True
+    
+    # 1. Spoken string containing dialog + status
+    engine.speak("All operations complete. [Task complete]")
+    txt = engine.queue.get_nowait()
+    assert txt == "All operations complete."
+    
+    # 2. String containing only status variations (should not queue speaking)
+    engine.speak("Task complete.")
+    assert engine.queue.empty()
+    
+    engine.speak("[Task complete]")
+    assert engine.queue.empty()
+
 @patch("app.voice.voice_manager.settings")
 def test_voice_manager_init(mock_settings):
     """

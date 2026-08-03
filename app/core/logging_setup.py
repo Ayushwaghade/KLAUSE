@@ -7,11 +7,11 @@ def setup_logging():
     logger.remove()
     
     import os
-    pw = os.environ.get("INSTAGRAM_PASSWORD") or settings.instagram.password
+    api_key = os.environ.get("GEMINI_API_KEY") or settings.gemini_api_key
     
     def patcher(record):
-        if pw and len(str(pw)) > 2 and str(pw) in record["message"]:
-            record["message"] = record["message"].replace(str(pw), "[REDACTED_PASSWORD]")
+        if api_key and len(str(api_key)) > 5 and str(api_key) in record["message"]:
+            record["message"] = record["message"].replace(str(api_key), "[REDACTED_API_KEY]")
             
     logger.configure(patcher=patcher)
     

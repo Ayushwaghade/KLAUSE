@@ -77,7 +77,7 @@ def test_dispatcher_boundary_checks(tmp_path):
     dispatcher = Dispatcher(confirm_fn=mock_confirm)
     
     # Case A: Writing INSIDE session folder -> Allowed (no warning, runs mock function)
-    with patch("app.tools.base.tool_registry") as mock_registry:
+    with patch("app.core.dispatcher.tool_registry") as mock_registry:
         mock_tool = MagicMock()
         mock_tool.destructive = False
         mock_tool.func = lambda path, content: "Success"
@@ -90,7 +90,7 @@ def test_dispatcher_boundary_checks(tmp_path):
         assert len(confirm_results) == 0
 
     # Case B: Writing OUTSIDE session folder -> Intercepted, confirm_fn called, rejected
-    with patch("app.tools.base.tool_registry") as mock_registry:
+    with patch("app.core.dispatcher.tool_registry") as mock_registry:
         mock_tool = MagicMock()
         mock_tool.destructive = False
         mock_tool.func = lambda path, content: "Success"
@@ -146,3 +146,35 @@ def test_session_folder_tools(tmp_path):
 
     # Reset
     context.session_data_folder = None
+
+
+def test_dispatcher_parameter_filtering():
+    # Setup Dispatcher
+    dispatcher = Dispatcher()
+    
+    # Mock a tool function that accepts only specific parameters
+    with patch("app.core.dispatcher.tool_registry") as mock_registry:
+        mock_tool = MagicMock()
+        mock_tool.destructive = False
+        
+        # Test function accepts only 'selector' and 'limit'
+        def mock_func(selector, limit=5):
+            return f"Processed selector '{selector}' with limit {limit}"
+            
+        mock_tool.func = mock_func
+        mock_registry.__contains__.return_value = True
+        mock_registry.__getitem__.return_value = mock_tool
+        
+        # Execute with extra/hallucinated parameters (index, action, document_id)
+        params = {
+            "selector": "div#target",
+            "limit": 10,
+            "index": 0,
+            "action": "none",
+            "document_id": "none"
+        }
+        
+        obs = dispatcher.execute("mock_browser_parse", params)
+        assert obs.success is True
+        assert obs.result == "Processed selector 'div#target' with limit 10"
+        assert obs.error is None

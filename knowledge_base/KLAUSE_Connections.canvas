@@ -1,0 +1,13 @@
+{
+	"nodes":[
+		{"id":"c2603c5f","type":"text","text":"🌐 https://en.wikipedia.org/wiki/Big_data","x":-400,"y":80,"width":240,"height":120,"color":"6"},
+		{"id":"e7542b9b","type":"text","text":"💬 **Query** (2026-07-28 18:47)\nWhat is big data and how do we store vectors?","x":-220,"y":-340,"width":300,"height":120,"color":"4"},
+		{"id":"134d1f91","type":"file","file":"Vector_Search_Architectures.md","x":340,"y":-400,"width":280,"height":280},
+		{"id":"d4502268","type":"file","file":"#_PhishGuard_AI_Technical_Summary.md","x":100,"y":130,"width":380,"height":330}
+	],
+	"edges":[
+		{"id":"922b0d7b","fromNode":"e7542b9b","fromSide":"right","toNode":"d4502268","toSide":"left","label":"created"},
+		{"id":"9d189cf9","fromNode":"134d1f91","fromSide":"left","toNode":"e7542b9b","toSide":"right","label":"read context"},
+		{"id":"31cfb668","fromNode":"e7542b9b","fromSide":"left","toNode":"c2603c5f","toSide":"right","label":"referenced"}
+	]
+}

@@ -28,26 +28,11 @@ class TTSEngine:
         self.queue = queue.Queue()
         self.stop_event = threading.Event()
         self.sapi_voice = None
-        self.is_active = False
+        self.is_active = HAS_WIN32
         
         if not HAS_WIN32:
             logger.warning("win32com.client not found. TTS will run in offline stub mode.")
             return
-
-        logger.info("Initializing SAPI Text-to-Speech voice engine.")
-        try:
-            # Initialize SAPI Voice COM object
-            # Note: CoInitialize is called automatically in python win32 threads
-            self.sapi_voice = win32com.client.Dispatch("SAPI.SpVoice")
-            self.sapi_voice.Voice = self._get_best_voice()
-            
-            # Clamp and set speaking rate (-10 to 10)
-            rate = max(-10, min(10, getattr(settings.voice, "speaking_rate", 0)))
-            self.sapi_voice.Rate = rate
-            self.is_active = True
-            logger.info(f"SAPI voice successfully selected: {self.sapi_voice.Voice.GetDescription()} (Rate: {rate})")
-        except Exception as e:
-            logger.error(f"SAPI TTS initialization failed: {e}")
 
         # Start background worker thread
         self.worker_thread = threading.Thread(target=self._worker, daemon=True)
@@ -83,6 +68,14 @@ class TTSEngine:
         # Clean text (remove Markdown markup like asterisks, links etc. to avoid voice spelling them out)
         clean_text = re.sub(r'[\*\#\`\-\_]', '', text)
         
+        # Strip "Task complete" status variations from spoken text (user wants it typed only)
+        clean_text = re.sub(r'(?i)\b[\[\(]?task\s+complete[\]\)]?[\.\!\?]?\s*', '', clean_text)
+        
+        # If the remaining text contains no words/alphanumerics, do not queue speak
+        if not clean_text.strip() or not re.search(r'\w', clean_text):
+            logger.debug("TTS: Suppressing speech because text contains only task status/metadata.")
+            return
+
         # Truncate to keep speaking output concise
         max_sents = getattr(settings.voice, "max_spoken_sentences", 3)
         truncated = truncate_sentences(clean_text, max_sents)
@@ -93,24 +86,18 @@ class TTSEngine:
 
     def stop(self):
         """
-        Instantly halts any currently spoken sentences (Async speech purge).
+        Instantly halts any currently spoken sentences (Thread-safe speech purge).
         """
-        if self.is_active and self.sapi_voice:
-            logger.info("TTS: Purging and stopping speech output.")
-            self.stop_event.set()
-            
-            # Initialize COM on calling thread if needed
-            if pythoncom:
-                try:
-                    pythoncom.CoInitialize()
-                except Exception:
-                    pass
-            
+        logger.info("TTS: Purging and stopping speech output.")
+        self.stop_event.set()
+        
+        # Clear the queue
+        while not self.queue.empty():
             try:
-                # SVSFPurgeBeforeSpeak = 2 halts any active speech output
-                self.sapi_voice.Speak("", 2)
-            except Exception as e:
-                logger.error(f"SAPI Speak purge failed: {e}")
+                self.queue.get_nowait()
+                self.queue.task_done()
+            except queue.Empty:
+                break
 
     def _worker(self):
         """
@@ -122,6 +109,18 @@ class TTSEngine:
             except Exception as e:
                 logger.error(f"Failed to CoInitialize in TTS worker thread: {e}")
 
+        # Initialize SAPI SpVoice within the background owner thread to avoid cross-thread COM issues
+        if self.is_active:
+            try:
+                self.sapi_voice = win32com.client.Dispatch("SAPI.SpVoice")
+                self.sapi_voice.Voice = self._get_best_voice()
+                rate = max(-10, min(10, getattr(settings.voice, "speaking_rate", 0)))
+                self.sapi_voice.Rate = rate
+                logger.info(f"SAPI TTS successfully initialized in worker thread. Selected: {self.sapi_voice.Voice.GetDescription()}")
+            except Exception as e:
+                logger.error(f"SAPI TTS initialization failed in worker thread: {e}")
+                self.is_active = False
+
         while True:
             try:
                 text = self.queue.get()
@@ -130,9 +129,15 @@ class TTSEngine:
                     # SVSFlagsAsync = 1 speaks asynchronously so we can poll stop_event or process next
                     self.sapi_voice.Speak(text, 1)
                     # Poll while speaking to check for stop interrupt
-                    while not self.sapi_voice.WaitUntilDone(100):
+                    while not self.sapi_voice.WaitUntilDone(50):
                         if self.stop_event.is_set():
+                            # Purge speech from within the owner thread!
+                            self.sapi_voice.Speak("", 2)
                             break
                 self.queue.task_done()
             except Exception as e:
                 logger.error(f"TTS worker exception: {e}")
+
+# Shared global instance of TTSEngine
+tts_engine = TTSEngine()
+

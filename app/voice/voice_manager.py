@@ -4,7 +4,7 @@ import threading
 from loguru import logger
 from app.config.config import settings
 from app.voice.stt import record_audio_clip, transcribe_audio
-from app.voice.tts import TTSEngine
+from app.voice.tts import TTSEngine, tts_engine
 
 # Global thread-safe queue for routing transcribed vocal inputs to main loop
 voice_input_queue = queue.Queue()
@@ -18,7 +18,7 @@ except ImportError:
 
 class VoiceManager:
     def __init__(self):
-        self.tts = TTSEngine()
+        self.tts = tts_engine
         self.enabled = settings.voice.enabled
         self.trigger_mode = settings.voice.trigger_mode
         self.hotkey = settings.voice.hotkey

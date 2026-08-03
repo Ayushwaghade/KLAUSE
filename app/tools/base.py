@@ -39,10 +39,23 @@ def tool(name: Optional[str] = None, description: Optional[str] = None, destruct
 
 def get_tool_definitions() -> str:
     """
-    Format registered tools for the LLM prompt.
+    Format registered tools for the LLM prompt with their exact signatures.
     """
+    import inspect
     lines = []
     for name, tool_inst in tool_registry.items():
+        sig = inspect.signature(tool_inst.func)
+        params_list = []
+        for param_name, param in sig.parameters.items():
+            if param_name in ("confirm_fn", "self", "args", "kwargs"):
+                continue
+            
+            default_str = ""
+            if param.default != inspect.Parameter.empty:
+                default_str = f"={repr(param.default)}"
+            params_list.append(f"{param_name}{default_str}")
+            
+        params_str = ", ".join(params_list)
         destructive_str = " (DESTRUCTIVE)" if tool_inst.destructive else ""
-        lines.append(f"- {name}{destructive_str}: {tool_inst.description}")
+        lines.append(f"- {name}({params_str}){destructive_str}: {tool_inst.description}")
     return "\n".join(lines)
