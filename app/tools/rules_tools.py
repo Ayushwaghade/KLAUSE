@@ -5,6 +5,7 @@ from app.tools.base import tool
 
 @tool(
     name="modify_rules",
+    group="core",
     description=(
         "Safely modifies the workspace rules.md file. "
         "Allows adding or removing rules. Backs up the current rules to rules.md.bak before editing. "

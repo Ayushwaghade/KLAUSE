@@ -44,6 +44,7 @@ def _run_git_cmd(args: list[str]) -> str:
 
 @tool(
     name="git_status",
+    group="terminal",
     description="Shows the status of files in the active git repository. Returns a concise list of modifications.",
     destructive=False
 )
@@ -61,6 +62,7 @@ def git_status() -> str:
 
 @tool(
     name="git_diff",
+    group="terminal",
     description="Shows uncommitted diffs. Argument: file_path (str, optional - to diff a specific file).",
     destructive=False
 )
@@ -78,6 +80,7 @@ def git_diff(file_path: str = None) -> str:
 
 @tool(
     name="git_log",
+    group="terminal",
     description="Shows the recent commit logs. Arguments: limit (int, default=5), oneline (bool, default=True).",
     destructive=False
 )
@@ -95,6 +98,7 @@ def git_log(limit: int = 5, oneline: bool = True) -> str:
 
 @tool(
     name="git_add",
+    group="terminal",
     description="Stages changes to files in the git repository. Argument: paths (list of str, optional - if empty or None, stages all changes using '.').",
     destructive=True
 )
@@ -115,6 +119,7 @@ def git_add(paths: list[str] = None) -> str:
 
 @tool(
     name="git_commit",
+    group="terminal",
     description="Commits staged files in the git repository. Argument: message (str). Note: Stages nothing; files must already be added.",
     destructive=True
 )

@@ -55,8 +55,10 @@ class Dispatcher:
                     target_path = params["output_path"]
                 elif "dest" in params:
                     target_path = params["dest"]
+                elif "dest_path" in params:
+                    target_path = params["dest_path"]
 
-                write_tools = ["write_file", "download_file", "fs_copy", "fs_move", "fs_delete"]
+                write_tools = ["write_file", "download_file", "fs_copy", "fs_move", "fs_delete", "download_image"]
                 if tool_name in write_tools and target_path:
                     abs_target = os.path.abspath(target_path)
                     abs_session = os.path.abspath(session_folder)

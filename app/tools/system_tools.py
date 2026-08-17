@@ -4,6 +4,7 @@ from app.tools.base import tool
 
 @tool(
     name="read_file",
+    group="core",
     description="Reads the contents of a file from the local workspace. Argument: path (str)."
 )
 def read_file(path: str) -> str:
@@ -18,6 +19,7 @@ def read_file(path: str) -> str:
 
 @tool(
     name="write_file",
+    group="core",
     description="Writes content to a file in the local workspace. Arguments: path (str), content (str)."
 )
 def write_file(path: str, content: str, confirm_fn: Optional[Callable[[str], bool]] = None) -> str:
@@ -45,6 +47,7 @@ def write_file(path: str, content: str, confirm_fn: Optional[Callable[[str], boo
 
 @tool(
     name="web_search",
+    group="core",
     description="Performs a web search for the query and returns matching webpage titles, links, and text descriptions. Argument: query (str)."
 )
 def web_search(query: str) -> str:
@@ -174,6 +177,7 @@ def web_search(query: str) -> str:
 
 @tool(
     name="download_file",
+    group="core",
     description="Downloads a file from a specified URL to a local destination path. Arguments: url (str), dest_path (str)."
 )
 def download_file(url: str, dest_path: str) -> str:
@@ -205,3 +209,127 @@ def download_file(url: str, dest_path: str) -> str:
     except Exception as e:
         logger.error(f"Download failed: {e}")
         return f"Error downloading file: {e}"
+
+@tool(
+    name="download_image",
+    group="filesystem",
+    description="Searches for and downloads a high-quality free stock or general web image matching the search query to a local destination path. Finds the best photo from Bing, Pexels, and StockSnap."
+)
+def download_image(query: str, dest_path: str) -> str:
+    """Searches stock photo and general web directories for a query, extracts the best photo, and downloads it to dest_path."""
+    import urllib.request
+    import urllib.parse
+    import re
+    import os
+    from loguru import logger
+
+    logger.info(f"Download Image Tool: Searching and downloading image for query '{query}' to '{dest_path}'")
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+        "Connection": "keep-alive"
+    }
+
+    # 1. Try Bing Images Search (excellent for both stock photos AND copyrighted pop-culture/products)
+    try:
+        encoded_query = urllib.parse.quote(query)
+        bing_url = f"https://www.bing.com/images/async?q={encoded_query}&first=0&count=50"
+        logger.debug(f"Searching Bing Images: {bing_url}")
+        
+        req = urllib.request.Request(bing_url, headers=headers)
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            html = resp.read().decode('utf-8', errors='ignore')
+            
+        # Parse out murl parameter from JSON in Bing Images HTML
+        # Bing uses format: &quot;murl&quot;:&quot;https://url.jpg&quot;
+        murls = re.findall(r'&quot;murl&quot;:&quot;(https?://(?:(?!&quot;).)+?\.(?:jpg|jpeg|png|gif|webp|tiff|bmp).*?)&quot;', html)
+        if murls:
+            target_url = murls[0]
+            logger.info(f"Found image on Bing Images: {target_url}")
+            
+            # Download target URL
+            dest_dir = os.path.dirname(dest_path)
+            if dest_dir and not os.path.exists(dest_dir):
+                os.makedirs(dest_dir, exist_ok=True)
+                
+            dl_req = urllib.request.Request(target_url, headers=headers)
+            with urllib.request.urlopen(dl_req, timeout=30) as dl_resp, open(dest_path, 'wb') as out_file:
+                data = dl_resp.read()
+                out_file.write(data)
+                
+            size = len(data)
+            logger.info(f"Successfully downloaded Bing image ({size} bytes)")
+            return f"Success: High-quality image for '{query}' downloaded from Bing to '{dest_path}' ({size} bytes)."
+    except Exception as e:
+        logger.warning(f"Bing image search failed or found nothing: {e}")
+
+    # 2. Try Pexels Search (generic royalty-free fallback)
+    try:
+        encoded_query = urllib.parse.quote(query)
+        pexels_url = f"https://www.pexels.com/search/{encoded_query}/"
+        logger.debug(f"Searching Pexels fallback: {pexels_url}")
+        
+        req = urllib.request.Request(pexels_url, headers=headers)
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            html = resp.read().decode('utf-8', errors='ignore')
+            
+        # Find pexels high-res images
+        pexels_matches = re.findall(r'https://images\.pexels\.com/photos/\d+/pexels-photo-\d+\.jpeg', html)
+        if pexels_matches:
+            target_url = pexels_matches[0]
+            if "?" not in target_url:
+                target_url += "?auto=compress&cs=tinysrgb&h=1200"
+            
+            logger.info(f"Found image on Pexels: {target_url}")
+            
+            # Download target URL
+            dest_dir = os.path.dirname(dest_path)
+            if dest_dir and not os.path.exists(dest_dir):
+                os.makedirs(dest_dir, exist_ok=True)
+                
+            dl_req = urllib.request.Request(target_url, headers=headers)
+            with urllib.request.urlopen(dl_req, timeout=30) as dl_resp, open(dest_path, 'wb') as out_file:
+                data = dl_resp.read()
+                out_file.write(data)
+                
+            size = len(data)
+            logger.info(f"Successfully downloaded Pexels image ({size} bytes)")
+            return f"Success: High-quality image for '{query}' downloaded from Pexels to '{dest_path}' ({size} bytes)."
+    except Exception as e:
+        logger.warning(f"Pexels image search failed or found nothing: {e}")
+
+    # 3. Try StockSnap Search Fallback
+    try:
+        encoded_query = urllib.parse.quote(query)
+        stocksnap_url = f"https://stocksnap.io/search/{encoded_query}"
+        logger.debug(f"Searching StockSnap fallback: {stocksnap_url}")
+        
+        req = urllib.request.Request(stocksnap_url, headers=headers)
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            html = resp.read().decode('utf-8', errors='ignore')
+            
+        # Find stocksnap thumbnails
+        stocksnap_matches = re.findall(r'https://cdn\.stocksnap\.io/img-thumbs/280h/[^\s\"\'\<\>]+?\.jpg', html)
+        if stocksnap_matches:
+            target_url = stocksnap_matches[0].replace("/img-thumbs/280h/", "/img-thumbs/960w/")
+            logger.info(f"Found image on StockSnap: {target_url}")
+            
+            # Download target URL
+            dest_dir = os.path.dirname(dest_path)
+            if dest_dir and not os.path.exists(dest_dir):
+                os.makedirs(dest_dir, exist_ok=True)
+                
+            dl_req = urllib.request.Request(target_url, headers=headers)
+            with urllib.request.urlopen(dl_req, timeout=30) as dl_resp, open(dest_path, 'wb') as out_file:
+                data = dl_resp.read()
+                out_file.write(data)
+                
+            size = len(data)
+            logger.info(f"Successfully downloaded StockSnap image ({size} bytes)")
+            return f"Success: High-quality image for '{query}' downloaded from StockSnap to '{dest_path}' ({size} bytes)."
+    except Exception as e:
+        logger.error(f"StockSnap image search failed: {e}")
+
+    return f"Error: Could not find or download any free image matching '{query}' from available providers."
+

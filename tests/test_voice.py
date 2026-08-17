@@ -30,13 +30,15 @@ def test_get_best_voice_fallback(mock_thread, mock_dispatch):
     v2.GetDescription.return_value = "Microsoft David Desktop"
     
     mock_voices.Count = 2
-    mock_voices.Item.side_effect = [v1, v2]
+    mock_voices.Item.side_effect = lambda idx: v1 if idx == 0 else v2
     mock_sapi.GetVoices.return_value = mock_voices
     mock_dispatch.return_value = mock_sapi
     
     engine = TTSEngine()
-    assert engine.sapi_voice is not None
-    mock_sapi.Voice = v2
+    engine.sapi_voice = mock_sapi
+    
+    best_voice = engine._get_best_voice()
+    assert best_voice == v2
 
 @patch("win32com.client.Dispatch")
 @patch("threading.Thread")

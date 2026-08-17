@@ -27,6 +27,7 @@ def _resolve_path(relative: str) -> Path:
 
 @tool(
     name="fs_list_dir",
+    group="filesystem",
     description="Lists contents of a folder inside the active project. Argument: dir_path (str, optional - defaults to current project root '.').",
     destructive=False
 )
@@ -62,6 +63,7 @@ def fs_list_dir(dir_path: str = ".") -> str:
 
 @tool(
     name="fs_create_dir",
+    group="filesystem",
     description="Creates a directory inside the active project workspace. Argument: path (str).",
     destructive=False
 )
@@ -81,6 +83,7 @@ def fs_create_dir(path: str) -> str:
 
 @tool(
     name="fs_copy",
+    group="filesystem",
     description="Copies a file or folder inside the active project workspace. Arguments: src (str), dest (str).",
     destructive=False
 )
@@ -112,6 +115,7 @@ def fs_copy(src: str, dest: str) -> str:
 
 @tool(
     name="fs_move",
+    group="filesystem",
     description="Moves or renames a file or folder inside the active project workspace. Arguments: src (str), dest (str).",
     destructive=False
 )
@@ -139,6 +143,7 @@ def fs_move(src: str, dest: str) -> str:
 
 @tool(
     name="fs_delete",
+    group="filesystem",
     description="Deletes a file or folder safely by moving it to the system Recycle Bin. Argument: path (str).",
     destructive=True
 )

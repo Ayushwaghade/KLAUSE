@@ -79,6 +79,9 @@ class SystemState:
     def _full_block(self) -> str:
         lines = [f"CURRENT SYSTEM STATE ({self.timestamp}):"]
         lines.append(f"- Active window: {self.desktop.active_window}")
+        
+        visible = ", ".join(self.desktop.visible_windows) or "none"
+        lines.append(f"- Visible windows: {visible}")
 
         if self.active_project:
             p = self.active_project
@@ -107,6 +110,11 @@ class SystemState:
         # Desktop-level diffs
         if self.desktop.active_window != prev.desktop.active_window:
             changes.append(f"Active window: {prev.desktop.active_window} → {self.desktop.active_window}")
+
+        if self.desktop.visible_windows != prev.desktop.visible_windows:
+            visible_prev = ", ".join(prev.desktop.visible_windows) or "none"
+            visible_curr = ", ".join(self.desktop.visible_windows) or "none"
+            changes.append(f"Visible windows: {visible_prev} → {visible_curr}")
 
         if self.desktop.clipboard_preview != prev.desktop.clipboard_preview:
             changes.append("Clipboard changed")
@@ -149,6 +157,11 @@ class StateMachine:
     def __init__(self):
         self._current: Optional[SystemState] = None
         self._previous: Optional[SystemState] = None
+
+    def reset_history(self):
+        """Reset state tracking to force a full block on the next turn."""
+        self._current = None
+        self._previous = None
 
     def refresh(self) -> SystemState:
         """Parallel-collects all state with 3 s timeout per collector."""

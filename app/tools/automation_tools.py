@@ -11,6 +11,7 @@ from app.automation.event_engine import EventType
 
 @tool(
     name="schedule_add_cron",
+    group="automation",
     description="Registers a recurring cron job that runs a terminal command or workflow. Cron expressions should have 5 fields (minute hour day month day_of_week). Arguments: job_id (str), command (str), cron_expression (str).",
     destructive=False
 )
@@ -21,6 +22,7 @@ def schedule_add_cron(job_id: str, command: str, cron_expression: str) -> str:
 
 @tool(
     name="schedule_add_one_shot",
+    group="automation",
     description="Schedules a one-shot terminal command or workflow at a specific future UTC date and time. Date format should be YYYY-MM-DD HH:MM:SS. Arguments: job_id (str), command (str), run_at_utc (str).",
     destructive=False
 )
@@ -37,6 +39,7 @@ def schedule_add_one_shot(job_id: str, command: str, run_at_utc: str) -> str:
 
 @tool(
     name="schedule_pause",
+    group="automation",
     description="Temporarily pauses a scheduled job. Arguments: job_id (str).",
     destructive=False
 )
@@ -49,6 +52,7 @@ def schedule_pause(job_id: str) -> str:
 
 @tool(
     name="schedule_resume",
+    group="automation",
     description="Resumes a paused scheduled job. Arguments: job_id (str).",
     destructive=False
 )
@@ -61,6 +65,7 @@ def schedule_resume(job_id: str) -> str:
 
 @tool(
     name="schedule_list",
+    group="automation",
     description="Lists all currently active and paused scheduled jobs, showing their local timezone runtimes. No arguments required.",
     destructive=False
 )
@@ -81,6 +86,7 @@ def schedule_list() -> str:
 
 @tool(
     name="schedule_remove",
+    group="automation",
     description="Permanently deletes a scheduled job. Arguments: job_id (str).",
     destructive=True
 )
@@ -93,6 +99,7 @@ def schedule_remove(job_id: str) -> str:
 
 @tool(
     name="rule_add",
+    group="automation",
     description=(
         "Registers an event-driven automation rule (e.g. executing a tool or triggering KLAUSE when a window is focused). "
         "Arguments: rule_id (str), event_type (str), action_type (str: 'tool_call'|'trigger_react'), "
@@ -161,6 +168,7 @@ def rule_add(
 
 @tool(
     name="rule_list",
+    group="automation",
     description="Lists all registered automation rules. No arguments required.",
     destructive=False
 )
@@ -183,6 +191,7 @@ def rule_list() -> str:
 
 @tool(
     name="rule_remove",
+    group="automation",
     description="Deletes an automation rule by its ID. Arguments: rule_id (str).",
     destructive=True
 )

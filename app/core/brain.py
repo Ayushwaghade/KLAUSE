@@ -1,4 +1,5 @@
 import os
+import re
 import json
 from typing import List, Dict, Any, Optional
 from loguru import logger
@@ -6,11 +7,12 @@ from google import genai
 from google.genai import types
 from app.config.config import settings
 from app.models.agent import AgentAction, ToolObservation
-from app.tools.base import get_tool_definitions
+from app.tools.base import get_tool_definitions, get_tool_definitions_for_groups
 from app.core.dispatcher import Dispatcher
 from app.memory.memory_manager import get_memory_manager
 from app.core.context import context
 from app.core.state_machine import state_machine
+from app.core.tool_router import classify_request, escalate_group, get_tool_group
 
 # Force tool registration on package import
 import app.tools
@@ -85,6 +87,12 @@ class Brain:
 
     def think(self, user_input: str, session_id: str = "default_session", step_callback = None) -> str:
         logger.info(f"Received user goal: {user_input} (Session: {session_id})")
+        
+        # Reset state machine tracking at start of new request turn
+        try:
+            state_machine.reset_history()
+        except Exception as e:
+            logger.debug(f"Failed to reset state machine history: {e}")
         
         if not self.is_connected:
             return (
@@ -184,9 +192,30 @@ class Brain:
             logger.warning(f"Failed to retrieve semantic memories: {e}")
 
         history: List[Dict[str, Any]] = []
-        
-        for step in range(1, self.max_steps + 1):
-            logger.info(f"ReAct Loop - Step {step}/{self.max_steps}")
+
+        # ── Component 1: Smart Tool Group Filtering ──
+        active_groups = classify_request(user_input)
+        tools_str = get_tool_definitions_for_groups(active_groups)
+        logger.info(f"Active tool groups: {active_groups} ({tools_str.count(chr(10))+1} tools loaded)")
+
+        # ── Component 2: Plan-Then-Execute ──
+        has_plan = False
+        plan_str = ""
+        if self._detect_complexity(user_input):
+            plan_str = self._generate_plan(user_input, tools_str)
+            if plan_str:
+                has_plan = True
+                logger.info(f"Execution plan generated ({plan_str.count(chr(10))+1} steps)")
+
+        # ── Component 3 & 4: Failure tracking & dynamic step budget ──
+        consecutive_failures = 0
+        last_failed_tool = None
+        step_budget = self.max_steps  # starts at 10
+        step = 0
+
+        while step < step_budget:
+            step += 1
+            logger.info(f"ReAct Loop - Step {step}/{step_budget}")
             
             # Check for interrupt signal
             if context.is_interrupted(session_id):
@@ -214,7 +243,20 @@ class Brain:
                 if getattr(settings, 'state_machine', None) and settings.state_machine.enabled:
                     state_machine.refresh()
                     state_block = state_machine.get_prompt_block()
-                    state_context_str = f"{state_block}\n\n" if state_block else ""
+                    if state_block:
+                        state_context_str = (
+                            f"════════════════════════════════════════════════════════════\n"
+                            f"TELEMETRY & DESKTOP STATE CONTEXT\n"
+                            f"════════════════════════════════════════════════════════════\n\n"
+                            f"You have direct access to the live state of Ayush's desktop below, including the active foreground window, background visible windows, active project workspace, and clipboard.\n\n"
+                            f"CRITICAL DIRECTIVES FOR TELEMETRY READS:\n"
+                            f"1. AVOID WASTEFUL TOOL CALLS: Before invoking any browser, DOM parsing, screenshot, OCR, or terminal tools to find out what song is playing, what website is open, what file is open, or what process is active, YOU MUST check the 'Active window' and 'Visible windows' titles in the block below.\n"
+                            f"2. MUSIC & VIDEO PLAYBACK: Media streaming sites (like YouTube, Spotify Web, Netflix, Soundcloud, etc.) update the browser's window title with the name of the active song, artist, or video (e.g., 'Taylor Swift - Daylight - YouTube - Brave'). If Ayush asks 'what song is playing', check these titles first! If you see a media title there, answer immediately with action='FINAL'.\n"
+                            f"3. OPEN FILES & IDEs: Code editors like VS Code update their window title with the active filename. If Ayush asks 'what file is open' or 'what am I coding', read the 'Active window', 'Active file', or 'Visible windows' details below.\n"
+                            f"4. INSTANT ANSWERS: If the answer is present in the state below, you MUST NOT execute any steps or tools. Jump directly to action='FINAL' and provide the answer to Ayush.\n\n"
+                            f"{state_block}\n\n"
+                            f"════════════════════════════════════════════════════════════\n\n"
+                        )
             except Exception as e:
                 logger.debug(f"State machine refresh skipped: {e}")
 
@@ -268,7 +310,7 @@ class Brain:
                 "  voice       — speak back to the user, adjust audio, customize voice settings\n\n"
                 "Every engineering task a human can do, you can do using these tools. "
                 "If a task does not require a browser (e.g. system commands, file writes), DO NOT open one.\n\n"
-                f"Available tools:\n{get_tool_definitions()}\n\n"
+                f"Available tools:\n{tools_str}\n\n"
                 "════════════════════════════════════════════════════════════\n"
                 "PART 2 — THE TIERED READING STRATEGY\n"
                 "════════════════════════════════════════════════════════════\n\n"
@@ -402,7 +444,9 @@ class Brain:
                 f"{relevant_memories_str}"
                 f"{past_history_str}"
                 f"User Goal: {user_input}\n\n"
+                f"{plan_str}"
                 f"Current Progress:\n{history_str or 'No steps taken yet.'}\n"
+                f"{self._build_reflection_block(consecutive_failures, last_failed_tool)}"
             )
             
             try:
@@ -492,6 +536,30 @@ class Brain:
                     context.last_error = str(observation.error)[:200]
                 logger.info(f"Step {step} Observation success: {observation.success}")
 
+                # ── Component 3: Track consecutive failures ──
+                if not observation.success:
+                    consecutive_failures += 1
+                    last_failed_tool = action_data.action
+                    logger.warning(f"Consecutive failures: {consecutive_failures} (last: {last_failed_tool})")
+
+                    # Fallback escalation: if a group's tool fails 2x, inject the fallback group
+                    if consecutive_failures >= 2 and last_failed_tool:
+                        failed_group = get_tool_group(last_failed_tool)
+                        fallback = escalate_group(failed_group)
+                        if fallback and fallback not in active_groups:
+                            active_groups.append(fallback)
+                            tools_str = get_tool_definitions_for_groups(active_groups)
+                            logger.info(f"Fallback escalation: added '{fallback}' group. Active groups now: {active_groups}")
+                else:
+                    consecutive_failures = 0
+                    last_failed_tool = None
+
+                # ── Component 4: Dynamic step extension ──
+                if step >= step_budget - 2 and has_plan and consecutive_failures == 0:
+                    if history and history[-1].get("observation") and history[-1]["observation"].success and step_budget < 15:
+                        step_budget = 15
+                        logger.info(f"Dynamic step extension granted: budget now {step_budget}")
+
                 if step_callback:
                     try:
                         step_callback({
@@ -521,9 +589,9 @@ class Brain:
                 return f"Sorry, I encountered an error running the agent loop: {e}"
                 
         # Limit reached
-        warning_msg = f"KLAUSE reached the maximum steps limit of {self.max_steps} without resolving the goal."
+        warning_msg = f"KLAUSE reached the step budget of {step_budget} without resolving the goal."
         logger.warning(warning_msg)
-        final_resp = f"Warning: I was unable to complete the task within {self.max_steps} steps. Last progress: {history[-1]['thought'] if history else 'None'}"
+        final_resp = f"Warning: I was unable to complete the task within {step_budget} steps. Last progress: {history[-1]['thought'] if history else 'None'}"
         try:
             get_memory_manager().save_conversation(
                 session_id=session_id,
@@ -548,6 +616,116 @@ class Brain:
         except Exception as e:
             logger.warning(f"Quick Gemini Call failed: {e}")
         return "none"
+
+    def _detect_complexity(self, user_input: str) -> bool:
+        """
+        Heuristic to determine if a user request is complex enough to warrant
+        an execution plan. Returns True if multi-step planning is recommended.
+        """
+        text = user_input.lower()
+        action_verbs = [
+            "open", "search", "find", "save", "create", "download", "play",
+            "run", "check", "read", "write", "send", "close", "install",
+            "delete", "move", "copy", "extract", "summarize", "analyze",
+            "browse", "navigate", "look up", "set up", "configure"
+        ]
+        conjunctions = [" and ", " then ", " also ", " after that ", " next ", " finally "]
+
+        verb_count = sum(1 for v in action_verbs if re.search(r'\b' + re.escape(v) + r'\b', text))
+        has_conjunction = any(c in text for c in conjunctions)
+
+        is_complex = verb_count >= 2 or has_conjunction
+        logger.debug(f"Complexity check: verbs={verb_count}, conjunction={has_conjunction}, complex={is_complex}")
+        return is_complex
+
+    def _generate_plan(self, user_input: str, tools_str: str) -> str:
+        """
+        Makes a lightweight API call to generate a numbered execution plan
+        before the ReAct loop begins. Returns the plan as a formatted string
+        to inject into the prompt, or empty string if planning fails.
+        """
+        plan_prompt = (
+            "You are a planning module for an AI assistant called KLAUSE. "
+            "Your job is to break down the user's goal into a numbered list of steps, "
+            "each with the tool name to use.\n\n"
+            f"Available tools:\n{tools_str}\n\n"
+            f"User Goal: {user_input}\n\n"
+            "Output a numbered plan (1-8 steps max). Each step should be:\n"
+            "<step_number>. <brief description> \u2192 <tool_name>\n\n"
+            "Example:\n"
+            "1. Search YouTube for the song \u2192 browser_open\n"
+            "2. Extract the first video link \u2192 browser_parse_html\n"
+            "3. Navigate to the video \u2192 browser_open\n"
+            "4. Confirm to user \u2192 FINAL\n\n"
+            "Output ONLY the numbered plan, nothing else."
+        )
+        try:
+            result = self._quick_gemini_call(plan_prompt)
+            if result and result.lower() != "none" and len(result) > 10:
+                clean_plan = result.strip()
+                logger.info(f"Generated plan:\n{clean_plan}")
+                return (
+                    f"EXECUTION PLAN (follow this order):\n"
+                    f"{clean_plan}\n\n"
+                )
+        except Exception as e:
+            logger.warning(f"Plan generation failed: {e}")
+        return ""
+
+    def _build_reflection_block(self, consecutive_failures: int, last_failed_tool: str = None) -> str:
+        """
+        Builds a detailed reflection prompt when KLAUSE has failed 2+ consecutive
+        tool calls. Forces the model to stop and critically analyze its approach
+        before retrying.
+        """
+        if consecutive_failures < 2:
+            return ""
+
+        tool_hint = ""
+        if last_failed_tool:
+            from app.tools.base import tool_registry
+            import inspect
+            tool_inst = tool_registry.get(last_failed_tool)
+            if tool_inst:
+                sig = inspect.signature(tool_inst.func)
+                params = [p for p in sig.parameters if p not in ("confirm_fn", "self", "args", "kwargs")]
+                tool_hint = (
+                    f"\n   Tool '{last_failed_tool}' accepts EXACTLY these parameters: {params}\n"
+                    f"   Its description: {tool_inst.description}\n"
+                )
+
+        return (
+            "\n"
+            "\u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2557\n"
+            "\u2551  \u26a0\ufe0f  MANDATORY REFLECTION \u2014 {n} CONSECUTIVE FAILURES DETECTED  \u2551\n"
+            "\u255a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u255d\n"
+            "\n"
+            "You have FAILED {n} consecutive tool calls. You MUST stop and reflect\n"
+            "before your next action. Rushing will cause another failure.\n"
+            "\n"
+            "STEP 1 \u2014 DIAGNOSE: What exactly went wrong in your last {n} attempts?\n"
+            "   - Did you pass a parameter that the tool does not accept?\n"
+            "   - Did you use the wrong tool entirely for this sub-task?\n"
+            "   - Was the input data malformed or missing?\n"
+            "   - Did a previous step's output not contain what you expected?\n"
+            "{tool_hint}"
+            "\n"
+            "STEP 2 \u2014 RECONSIDER: Is there a completely different approach?\n"
+            "   - Can you use a different tool to achieve the same result?\n"
+            "   - Should you fall back to a simpler strategy (e.g., OCR instead of DOM parsing)?\n"
+            "   - Would breaking this into smaller sub-steps help?\n"
+            "   - Review the Available tools list above for alternative tools.\n"
+            "\n"
+            "STEP 3 \u2014 FORMULATE: Write out your corrected tool call in your Thought\n"
+            "   before executing it. Verify every parameter name and value matches\n"
+            "   the tool's exact signature listed in 'Available tools' above.\n"
+            "\n"
+            "STEP 4 \u2014 LAST RESORT: If you have tried 3+ different approaches and none\n"
+            "   work, set action='FINAL' and honestly explain the blocker to Ayush.\n"
+            "   Do NOT keep looping on the same broken approach.\n"
+            "\n"
+            "DO NOT repeat the same failing call. Change your strategy.\n"
+        ).format(n=consecutive_failures, tool_hint=tool_hint)
 
     def _maybe_load_relevant_skill(self, user_input: str) -> str:
         """Lightweight pre-check — does this request match a known skill?"""

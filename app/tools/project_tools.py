@@ -6,6 +6,7 @@ from app.memory.memory_manager import get_memory_manager
 
 @tool(
     name="open_project",
+    group="core",
     description="Opens and activates a project workspace. Argument: name_or_path (str) - can be an absolute path or a registered project name in memory.",
     destructive=False
 )

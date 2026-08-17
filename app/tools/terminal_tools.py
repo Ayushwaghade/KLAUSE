@@ -32,6 +32,7 @@ def _is_blocked(command: str) -> bool:
 
 @tool(
     name="run_terminal_command",
+    group="terminal",
     description="Runs a shell command synchronously inside the active project directory. Argument: command (str).",
     destructive=True
 )
@@ -80,6 +81,7 @@ def run_terminal_command(command: str) -> str:
 
 @tool(
     name="run_terminal_command_async",
+    group="terminal",
     description="Launches a shell command in the background (asynchronous) inside the active project directory. Argument: command (str).",
     destructive=True
 )
@@ -121,6 +123,7 @@ def run_terminal_command_async(command: str) -> str:
 
 @tool(
     name="list_running_commands",
+    group="terminal",
     description="Lists all active background terminal commands launched by KLAUSE.",
     destructive=False
 )
@@ -156,6 +159,7 @@ def list_running_commands() -> str:
 
 @tool(
     name="kill_running_command",
+    group="terminal",
     description="Terminates an active background command. Argument: pid (int).",
     destructive=True
 )

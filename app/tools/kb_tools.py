@@ -9,6 +9,7 @@ def _parse_tags(tags_str: str) -> list:
 
 @tool(
     name="kb_add_document",
+    group="memory",
     description="Ingests, parses, chunks, and indexes a local file (.txt, .md, .pdf, .docx) into the Knowledge Base. Arguments: file_path (str), tags (str - comma-separated tags, optional, e.g. 'python,security'), chunk_size (int - optional, default 1000)."
 )
 def kb_add_document(file_path: str, tags: str = "", chunk_size: int = 1000) -> str:
@@ -18,6 +19,7 @@ def kb_add_document(file_path: str, tags: str = "", chunk_size: int = 1000) -> s
 
 @tool(
     name="kb_add_url",
+    group="memory",
     description="Downloads, parses, and indexes a webpage URL into the Knowledge Base. Falls back to a browser agent if the page has dynamic Javascript. Arguments: url (str), tags (str - comma-separated, optional), chunk_size (int - optional, default 1000)."
 )
 def kb_add_url(url: str, tags: str = "", chunk_size: int = 1000) -> str:
@@ -27,6 +29,7 @@ def kb_add_url(url: str, tags: str = "", chunk_size: int = 1000) -> str:
 
 @tool(
     name="kb_add_text",
+    group="memory",
     description="Directly index custom text content/notes into the Knowledge Base. Arguments: title (str), content (str), tags (str - comma-separated, optional), chunk_size (int - optional, default 1000)."
 )
 def kb_add_text(title: str, content: str, tags: str = "", chunk_size: int = 1000) -> str:
@@ -36,6 +39,7 @@ def kb_add_text(title: str, content: str, tags: str = "", chunk_size: int = 1000
 
 @tool(
     name="kb_delete",
+    group="memory",
     description="Removes a specific document and all its indexed chunks from the Knowledge Base by document ID. Arguments: document_id (str)."
 )
 def kb_delete(document_id: str) -> str:
@@ -47,6 +51,7 @@ def kb_delete(document_id: str) -> str:
 
 @tool(
     name="kb_clear",
+    group="memory",
     description="Purges all documents and matching vector chunks from the Knowledge Base. Argument: none."
 )
 def kb_clear() -> str:
@@ -55,6 +60,7 @@ def kb_clear() -> str:
 
 @tool(
     name="kb_search",
+    group="memory",
     description="Performs semantic similarity search on the Knowledge Base and returns matching snippets. Arguments: query (str), limit (int - optional, default 5)."
 )
 def kb_search(query: str, limit: int = 5) -> str:
@@ -81,6 +87,7 @@ def kb_search(query: str, limit: int = 5) -> str:
 
 @tool(
     name="kb_list_topics",
+    group="memory",
     description="Retrieves a list of all unique tags and topics indexed in the Knowledge Base. Argument: none."
 )
 def kb_list_topics() -> str:

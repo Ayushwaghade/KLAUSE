@@ -1,0 +1,801 @@
+[
+  {
+    "TargetFile": "e:\\KLAUSE\\app\\tools\\app_tools.py",
+    "Instruction": "Add group to tools",
+    "Description": "Add group parameter",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "StartLine": 8,
+        "EndLine": 9,
+        "TargetContent": "@tool(\n    name=\"open_application\",\n",
+        "ReplacementContent": "@tool(\n    name=\"open_application\",\n    group=\"window\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 47,
+        "EndLine": 48,
+        "TargetContent": "@tool(\n    name=\"request_user_confirmation\",\n",
+        "ReplacementContent": "@tool(\n    name=\"request_user_confirmation\",\n    group=\"window\",\n"
+      }
+    ],
+    "toolSummary": "Edit app_tools.py",
+    "toolAction": "Editing app_tools.py"
+  },
+  {
+    "TargetFile": "e:\\KLAUSE\\app\\tools\\automation_tools.py",
+    "Instruction": "Add group to tools",
+    "Description": "Add group parameter",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "StartLine": 12,
+        "EndLine": 13,
+        "TargetContent": "@tool(\n    name=\"schedule_add_cron\",\n",
+        "ReplacementContent": "@tool(\n    name=\"schedule_add_cron\",\n    group=\"automation\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 22,
+        "EndLine": 23,
+        "TargetContent": "@tool(\n    name=\"schedule_add_one_shot\",\n",
+        "ReplacementContent": "@tool(\n    name=\"schedule_add_one_shot\",\n    group=\"automation\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 38,
+        "EndLine": 39,
+        "TargetContent": "@tool(\n    name=\"schedule_pause\",\n",
+        "ReplacementContent": "@tool(\n    name=\"schedule_pause\",\n    group=\"automation\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 50,
+        "EndLine": 51,
+        "TargetContent": "@tool(\n    name=\"schedule_resume\",\n",
+        "ReplacementContent": "@tool(\n    name=\"schedule_resume\",\n    group=\"automation\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 62,
+        "EndLine": 63,
+        "TargetContent": "@tool(\n    name=\"schedule_list\",\n",
+        "ReplacementContent": "@tool(\n    name=\"schedule_list\",\n    group=\"automation\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 82,
+        "EndLine": 83,
+        "TargetContent": "@tool(\n    name=\"schedule_remove\",\n",
+        "ReplacementContent": "@tool(\n    name=\"schedule_remove\",\n    group=\"automation\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 94,
+        "EndLine": 95,
+        "TargetContent": "@tool(\n    name=\"rule_add\",\n",
+        "ReplacementContent": "@tool(\n    name=\"rule_add\",\n    group=\"automation\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 162,
+        "EndLine": 163,
+        "TargetContent": "@tool(\n    name=\"rule_list\",\n",
+        "ReplacementContent": "@tool(\n    name=\"rule_list\",\n    group=\"automation\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 184,
+        "EndLine": 185,
+        "TargetContent": "@tool(\n    name=\"rule_remove\",\n",
+        "ReplacementContent": "@tool(\n    name=\"rule_remove\",\n    group=\"automation\",\n"
+      }
+    ],
+    "toolSummary": "Edit automation_tools.py",
+    "toolAction": "Editing automation_tools.py"
+  },
+  {
+    "TargetFile": "e:\\KLAUSE\\app\\tools\\browser_tools.py",
+    "Instruction": "Add group to tools",
+    "Description": "Add group parameter",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "StartLine": 7,
+        "EndLine": 8,
+        "TargetContent": "@tool(\n    name=\"browser_open\",\n",
+        "ReplacementContent": "@tool(\n    name=\"browser_open\",\n    group=\"browser\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 32,
+        "EndLine": 33,
+        "TargetContent": "@tool(\n    name=\"desktop_open_url\",\n",
+        "ReplacementContent": "@tool(\n    name=\"desktop_open_url\",\n    group=\"browser\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 48,
+        "EndLine": 49,
+        "TargetContent": "@tool(\n    name=\"browser_read\",\n",
+        "ReplacementContent": "@tool(\n    name=\"browser_read\",\n    group=\"browser\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 60,
+        "EndLine": 61,
+        "TargetContent": "@tool(\n    name=\"browser_click\",\n",
+        "ReplacementContent": "@tool(\n    name=\"browser_click\",\n    group=\"browser\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 75,
+        "EndLine": 76,
+        "TargetContent": "@tool(\n    name=\"browser_fill\",\n",
+        "ReplacementContent": "@tool(\n    name=\"browser_fill\",\n    group=\"browser\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 93,
+        "EndLine": 94,
+        "TargetContent": "@tool(\n    name=\"browser_screenshot\",\n",
+        "ReplacementContent": "@tool(\n    name=\"browser_screenshot\",\n    group=\"browser\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 103,
+        "EndLine": 104,
+        "TargetContent": "@tool(\n    name=\"browser_get_url_and_title\",\n",
+        "ReplacementContent": "@tool(\n    name=\"browser_get_url_and_title\",\n    group=\"browser\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 113,
+        "EndLine": 114,
+        "TargetContent": "@tool(\n    name=\"browser_close\",\n",
+        "ReplacementContent": "@tool(\n    name=\"browser_close\",\n    group=\"browser\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 126,
+        "EndLine": 127,
+        "TargetContent": "@tool(\n    name=\"browser_parse_html\",\n",
+        "ReplacementContent": "@tool(\n    name=\"browser_parse_html\",\n    group=\"browser\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 150,
+        "EndLine": 151,
+        "TargetContent": "@tool(\n    name=\"browser_wait_for_content\",\n",
+        "ReplacementContent": "@tool(\n    name=\"browser_wait_for_content\",\n    group=\"browser\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 160,
+        "EndLine": 161,
+        "TargetContent": "@tool(\n    name=\"browser_get_text\",\n",
+        "ReplacementContent": "@tool(\n    name=\"browser_get_text\",\n    group=\"browser\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 173,
+        "EndLine": 174,
+        "TargetContent": "@tool(\n    name=\"browser_vision_read\",\n",
+        "ReplacementContent": "@tool(\n    name=\"browser_vision_read\",\n    group=\"browser\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 189,
+        "EndLine": 190,
+        "TargetContent": "@tool(\n    name=\"browser_scroll\",\n",
+        "ReplacementContent": "@tool(\n    name=\"browser_scroll\",\n    group=\"browser\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 199,
+        "EndLine": 200,
+        "TargetContent": "@tool(\n    name=\"browser_press\",\n",
+        "ReplacementContent": "@tool(\n    name=\"browser_press\",\n    group=\"browser\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 209,
+        "EndLine": 210,
+        "TargetContent": "@tool(\n    name=\"browser_type\",\n",
+        "ReplacementContent": "@tool(\n    name=\"browser_type\",\n    group=\"browser\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 224,
+        "EndLine": 225,
+        "TargetContent": "@tool(\n    name=\"browser_upload_file\",\n",
+        "ReplacementContent": "@tool(\n    name=\"browser_upload_file\",\n    group=\"browser\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 238,
+        "EndLine": 239,
+        "TargetContent": "@tool(\n    name=\"browser_list_tabs\",\n",
+        "ReplacementContent": "@tool(\n    name=\"browser_list_tabs\",\n    group=\"browser\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 254,
+        "EndLine": 255,
+        "TargetContent": "@tool(\n    name=\"browser_new_tab\",\n",
+        "ReplacementContent": "@tool(\n    name=\"browser_new_tab\",\n    group=\"browser\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 264,
+        "EndLine": 265,
+        "TargetContent": "@tool(\n    name=\"browser_close_tab\",\n",
+        "ReplacementContent": "@tool(\n    name=\"browser_close_tab\",\n    group=\"browser\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 274,
+        "EndLine": 275,
+        "TargetContent": "@tool(\n    name=\"browser_switch_tab\",\n",
+        "ReplacementContent": "@tool(\n    name=\"browser_switch_tab\",\n    group=\"browser\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 286,
+        "EndLine": 287,
+        "TargetContent": "@tool(\n    name=\"github_get_issues\",\n",
+        "ReplacementContent": "@tool(\n    name=\"github_get_issues\",\n    group=\"browser\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 306,
+        "EndLine": 307,
+        "TargetContent": "@tool(\n    name=\"github_get_prs\",\n",
+        "ReplacementContent": "@tool(\n    name=\"github_get_prs\",\n    group=\"browser\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 326,
+        "EndLine": 327,
+        "TargetContent": "@tool(\n    name=\"github_get_commits\",\n",
+        "ReplacementContent": "@tool(\n    name=\"github_get_commits\",\n    group=\"browser\",\n"
+      }
+    ],
+    "toolSummary": "Edit browser_tools.py",
+    "toolAction": "Editing browser_tools.py"
+  },
+  {
+    "TargetFile": "e:\\KLAUSE\\app\\tools\\clipboard_tools.py",
+    "Instruction": "Add group to tools",
+    "Description": "Add group parameter",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "StartLine": 5,
+        "EndLine": 6,
+        "TargetContent": "@tool(\n    name=\"clipboard_get_text\",\n",
+        "ReplacementContent": "@tool(\n    name=\"clipboard_get_text\",\n    group=\"filesystem\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 25,
+        "EndLine": 26,
+        "TargetContent": "@tool(\n    name=\"clipboard_set_text\",\n",
+        "ReplacementContent": "@tool(\n    name=\"clipboard_set_text\",\n    group=\"filesystem\",\n"
+      }
+    ],
+    "toolSummary": "Edit clipboard_tools.py",
+    "toolAction": "Editing clipboard_tools.py"
+  },
+  {
+    "TargetFile": "e:\\KLAUSE\\app\\tools\\filesystem_tools.py",
+    "Instruction": "Add group to tools",
+    "Description": "Add group parameter",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "StartLine": 28,
+        "EndLine": 29,
+        "TargetContent": "@tool(\n    name=\"fs_list_dir\",\n",
+        "ReplacementContent": "@tool(\n    name=\"fs_list_dir\",\n    group=\"filesystem\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 63,
+        "EndLine": 64,
+        "TargetContent": "@tool(\n    name=\"fs_create_dir\",\n",
+        "ReplacementContent": "@tool(\n    name=\"fs_create_dir\",\n    group=\"filesystem\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 82,
+        "EndLine": 83,
+        "TargetContent": "@tool(\n    name=\"fs_copy\",\n",
+        "ReplacementContent": "@tool(\n    name=\"fs_copy\",\n    group=\"filesystem\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 113,
+        "EndLine": 114,
+        "TargetContent": "@tool(\n    name=\"fs_move\",\n",
+        "ReplacementContent": "@tool(\n    name=\"fs_move\",\n    group=\"filesystem\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 140,
+        "EndLine": 141,
+        "TargetContent": "@tool(\n    name=\"fs_delete\",\n",
+        "ReplacementContent": "@tool(\n    name=\"fs_delete\",\n    group=\"filesystem\",\n"
+      }
+    ],
+    "toolSummary": "Edit filesystem_tools.py",
+    "toolAction": "Editing filesystem_tools.py"
+  },
+  {
+    "TargetFile": "e:\\KLAUSE\\app\\tools\\git_tools.py",
+    "Instruction": "Add group to tools",
+    "Description": "Add group parameter",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "StartLine": 45,
+        "EndLine": 46,
+        "TargetContent": "@tool(\n    name=\"git_status\",\n",
+        "ReplacementContent": "@tool(\n    name=\"git_status\",\n    group=\"terminal\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 62,
+        "EndLine": 63,
+        "TargetContent": "@tool(\n    name=\"git_diff\",\n",
+        "ReplacementContent": "@tool(\n    name=\"git_diff\",\n    group=\"terminal\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 79,
+        "EndLine": 80,
+        "TargetContent": "@tool(\n    name=\"git_log\",\n",
+        "ReplacementContent": "@tool(\n    name=\"git_log\",\n    group=\"terminal\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 96,
+        "EndLine": 97,
+        "TargetContent": "@tool(\n    name=\"git_add\",\n",
+        "ReplacementContent": "@tool(\n    name=\"git_add\",\n    group=\"terminal\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 116,
+        "EndLine": 117,
+        "TargetContent": "@tool(\n    name=\"git_commit\",\n",
+        "ReplacementContent": "@tool(\n    name=\"git_commit\",\n    group=\"terminal\",\n"
+      }
+    ],
+    "toolSummary": "Edit git_tools.py",
+    "toolAction": "Editing git_tools.py"
+  },
+  {
+    "TargetFile": "e:\\KLAUSE\\app\\tools\\kb_tools.py",
+    "Instruction": "Add group to tools",
+    "Description": "Add group parameter",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "StartLine": 10,
+        "EndLine": 11,
+        "TargetContent": "@tool(\n    name=\"kb_add_document\",\n",
+        "ReplacementContent": "@tool(\n    name=\"kb_add_document\",\n    group=\"memory\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 19,
+        "EndLine": 20,
+        "TargetContent": "@tool(\n    name=\"kb_add_url\",\n",
+        "ReplacementContent": "@tool(\n    name=\"kb_add_url\",\n    group=\"memory\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 28,
+        "EndLine": 29,
+        "TargetContent": "@tool(\n    name=\"kb_add_text\",\n",
+        "ReplacementContent": "@tool(\n    name=\"kb_add_text\",\n    group=\"memory\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 37,
+        "EndLine": 38,
+        "TargetContent": "@tool(\n    name=\"kb_delete\",\n",
+        "ReplacementContent": "@tool(\n    name=\"kb_delete\",\n    group=\"memory\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 48,
+        "EndLine": 49,
+        "TargetContent": "@tool(\n    name=\"kb_clear\",\n",
+        "ReplacementContent": "@tool(\n    name=\"kb_clear\",\n    group=\"memory\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 56,
+        "EndLine": 57,
+        "TargetContent": "@tool(\n    name=\"kb_search\",\n",
+        "ReplacementContent": "@tool(\n    name=\"kb_search\",\n    group=\"memory\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 82,
+        "EndLine": 83,
+        "TargetContent": "@tool(\n    name=\"kb_list_topics\",\n",
+        "ReplacementContent": "@tool(\n    name=\"kb_list_topics\",\n    group=\"memory\",\n"
+      }
+    ],
+    "toolSummary": "Edit kb_tools.py",
+    "toolAction": "Editing kb_tools.py"
+  },
+  {
+    "TargetFile": "e:\\KLAUSE\\app\\tools\\memory_tools.py",
+    "Instruction": "Add group to tools",
+    "Description": "Add group parameter",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "StartLine": 6,
+        "EndLine": 7,
+        "TargetContent": "@tool(\n    name=\"save_note\",\n",
+        "ReplacementContent": "@tool(\n    name=\"save_note\",\n    group=\"memory\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 21,
+        "EndLine": 22,
+        "TargetContent": "@tool(\n    name=\"save_research\",\n",
+        "ReplacementContent": "@tool(\n    name=\"save_research\",\n    group=\"memory\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 36,
+        "EndLine": 37,
+        "TargetContent": "@tool(\n    name=\"search_memory\",\n",
+        "ReplacementContent": "@tool(\n    name=\"search_memory\",\n    group=\"memory\",\n"
+      }
+    ],
+    "toolSummary": "Edit memory_tools.py",
+    "toolAction": "Editing memory_tools.py"
+  },
+  {
+    "TargetFile": "e:\\KLAUSE\\app\\tools\\obsidian_tools.py",
+    "Instruction": "Add group to tools",
+    "Description": "Add group parameter",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "StartLine": 9,
+        "EndLine": 10,
+        "TargetContent": "@tool(\n    name=\"configure_obsidian_vault\",\n",
+        "ReplacementContent": "@tool(\n    name=\"configure_obsidian_vault\",\n    group=\"memory\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 30,
+        "EndLine": 31,
+        "TargetContent": "@tool(\n    name=\"sync_obsidian_vault\",\n",
+        "ReplacementContent": "@tool(\n    name=\"sync_obsidian_vault\",\n    group=\"memory\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 51,
+        "EndLine": 52,
+        "TargetContent": "@tool(\n    name=\"search_obsidian_notes\",\n",
+        "ReplacementContent": "@tool(\n    name=\"search_obsidian_notes\",\n    group=\"memory\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 83,
+        "EndLine": 84,
+        "TargetContent": "@tool(\n    name=\"create_obsidian_note\",\n",
+        "ReplacementContent": "@tool(\n    name=\"create_obsidian_note\",\n    group=\"memory\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 101,
+        "EndLine": 102,
+        "TargetContent": "@tool(\n    name=\"append_obsidian_note\",\n",
+        "ReplacementContent": "@tool(\n    name=\"append_obsidian_note\",\n    group=\"memory\",\n"
+      }
+    ],
+    "toolSummary": "Edit obsidian_tools.py",
+    "toolAction": "Editing obsidian_tools.py"
+  },
+  {
+    "TargetFile": "e:\\KLAUSE\\app\\tools\\project_tools.py",
+    "Instruction": "Add group to tools",
+    "Description": "Add group parameter",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "StartLine": 7,
+        "EndLine": 8,
+        "TargetContent": "@tool(\n    name=\"open_project\",\n",
+        "ReplacementContent": "@tool(\n    name=\"open_project\",\n    group=\"core\",\n"
+      }
+    ],
+    "toolSummary": "Edit project_tools.py",
+    "toolAction": "Editing project_tools.py"
+  },
+  {
+    "TargetFile": "e:\\KLAUSE\\app\\tools\\rules_tools.py",
+    "Instruction": "Add group to tools",
+    "Description": "Add group parameter",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "StartLine": 6,
+        "EndLine": 7,
+        "TargetContent": "@tool(\n    name=\"modify_rules\",\n",
+        "ReplacementContent": "@tool(\n    name=\"modify_rules\",\n    group=\"core\",\n"
+      }
+    ],
+    "toolSummary": "Edit rules_tools.py",
+    "toolAction": "Editing rules_tools.py"
+  },
+  {
+    "TargetFile": "e:\\KLAUSE\\app\\tools\\session_tools.py",
+    "Instruction": "Add group to tools",
+    "Description": "Add group parameter",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "StartLine": 36,
+        "EndLine": 37,
+        "TargetContent": "@tool(\n    name=\"get_session_data_folder\",\n",
+        "ReplacementContent": "@tool(\n    name=\"get_session_data_folder\",\n    group=\"core\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 48,
+        "EndLine": 49,
+        "TargetContent": "@tool(\n    name=\"set_session_data_folder\",\n",
+        "ReplacementContent": "@tool(\n    name=\"set_session_data_folder\",\n    group=\"core\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 77,
+        "EndLine": 78,
+        "TargetContent": "@tool(\n    name=\"list_last_used_data_folder\",\n",
+        "ReplacementContent": "@tool(\n    name=\"list_last_used_data_folder\",\n    group=\"core\",\n"
+      }
+    ],
+    "toolSummary": "Edit session_tools.py",
+    "toolAction": "Editing session_tools.py"
+  },
+  {
+    "TargetFile": "e:\\KLAUSE\\app\\tools\\skill_repo_tools.py",
+    "Instruction": "Add group to tools",
+    "Description": "Add group parameter",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "StartLine": 4,
+        "EndLine": 5,
+        "TargetContent": "@tool(\n    name=\"import_skills_repo\",\n",
+        "ReplacementContent": "@tool(\n    name=\"import_skills_repo\",\n    group=\"automation\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 16,
+        "EndLine": 17,
+        "TargetContent": "@tool(\n    name=\"load_skill\",\n",
+        "ReplacementContent": "@tool(\n    name=\"load_skill\",\n    group=\"automation\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 27,
+        "EndLine": 28,
+        "TargetContent": "@tool(\n    name=\"list_skills\",\n",
+        "ReplacementContent": "@tool(\n    name=\"list_skills\",\n    group=\"automation\",\n"
+      }
+    ],
+    "toolSummary": "Edit skill_repo_tools.py",
+    "toolAction": "Editing skill_repo_tools.py"
+  },
+  {
+    "TargetFile": "e:\\KLAUSE\\app\\tools\\system_tools.py",
+    "Instruction": "Add group to tools",
+    "Description": "Add group parameter",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "StartLine": 5,
+        "EndLine": 6,
+        "TargetContent": "@tool(\n    name=\"read_file\",\n",
+        "ReplacementContent": "@tool(\n    name=\"read_file\",\n    group=\"core\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 19,
+        "EndLine": 20,
+        "TargetContent": "@tool(\n    name=\"write_file\",\n",
+        "ReplacementContent": "@tool(\n    name=\"write_file\",\n    group=\"core\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 46,
+        "EndLine": 47,
+        "TargetContent": "@tool(\n    name=\"web_search\",\n",
+        "ReplacementContent": "@tool(\n    name=\"web_search\",\n    group=\"core\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 175,
+        "EndLine": 176,
+        "TargetContent": "@tool(\n    name=\"download_file\",\n",
+        "ReplacementContent": "@tool(\n    name=\"download_file\",\n    group=\"core\",\n"
+      }
+    ],
+    "toolSummary": "Edit system_tools.py",
+    "toolAction": "Editing system_tools.py"
+  },
+  {
+    "TargetFile": "e:\\KLAUSE\\app\\tools\\terminal_tools.py",
+    "Instruction": "Add group to tools",
+    "Description": "Add group parameter",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "StartLine": 33,
+        "EndLine": 34,
+        "TargetContent": "@tool(\n    name=\"run_terminal_command\",\n",
+        "ReplacementContent": "@tool(\n    name=\"run_terminal_command\",\n    group=\"terminal\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 81,
+        "EndLine": 82,
+        "TargetContent": "@tool(\n    name=\"run_terminal_command_async\",\n",
+        "ReplacementContent": "@tool(\n    name=\"run_terminal_command_async\",\n    group=\"terminal\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 122,
+        "EndLine": 123,
+        "TargetContent": "@tool(\n    name=\"list_running_commands\",\n",
+        "ReplacementContent": "@tool(\n    name=\"list_running_commands\",\n    group=\"terminal\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 157,
+        "EndLine": 158,
+        "TargetContent": "@tool(\n    name=\"kill_running_command\",\n",
+        "ReplacementContent": "@tool(\n    name=\"kill_running_command\",\n    group=\"terminal\",\n"
+      }
+    ],
+    "toolSummary": "Edit terminal_tools.py",
+    "toolAction": "Editing terminal_tools.py"
+  },
+  {
+    "TargetFile": "e:\\KLAUSE\\app\\tools\\vision_tools.py",
+    "Instruction": "Add group to tools",
+    "Description": "Add group parameter",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "StartLine": 8,
+        "EndLine": 9,
+        "TargetContent": "@tool(\n    name=\"vision_capture_screen\",\n",
+        "ReplacementContent": "@tool(\n    name=\"vision_capture_screen\",\n    group=\"vision\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 20,
+        "EndLine": 21,
+        "TargetContent": "@tool(\n    name=\"vision_capture_window\",\n",
+        "ReplacementContent": "@tool(\n    name=\"vision_capture_window\",\n    group=\"vision\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 33,
+        "EndLine": 34,
+        "TargetContent": "@tool(\n    name=\"vision_capture_region\",\n",
+        "ReplacementContent": "@tool(\n    name=\"vision_capture_region\",\n    group=\"vision\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 45,
+        "EndLine": 46,
+        "TargetContent": "@tool(\n    name=\"vision_ocr_screen\",\n",
+        "ReplacementContent": "@tool(\n    name=\"vision_ocr_screen\",\n    group=\"vision\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 55,
+        "EndLine": 56,
+        "TargetContent": "@tool(\n    name=\"vision_ocr_region\",\n",
+        "ReplacementContent": "@tool(\n    name=\"vision_ocr_region\",\n    group=\"vision\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 64,
+        "EndLine": 65,
+        "TargetContent": "@tool(\n    name=\"vision_analyze\",\n",
+        "ReplacementContent": "@tool(\n    name=\"vision_analyze\",\n    group=\"vision\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 74,
+        "EndLine": 75,
+        "TargetContent": "@tool(\n    name=\"vision_describe_screen\",\n",
+        "ReplacementContent": "@tool(\n    name=\"vision_describe_screen\",\n    group=\"vision\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 83,
+        "EndLine": 84,
+        "TargetContent": "@tool(\n    name=\"vision_detect_errors\",\n",
+        "ReplacementContent": "@tool(\n    name=\"vision_detect_errors\",\n    group=\"vision\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 93,
+        "EndLine": 94,
+        "TargetContent": "@tool(\n    name=\"vision_read_terminal\",\n",
+        "ReplacementContent": "@tool(\n    name=\"vision_read_terminal\",\n    group=\"vision\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 101,
+        "EndLine": 102,
+        "TargetContent": "@tool(\n    name=\"vision_read_vscode_problems\",\n",
+        "ReplacementContent": "@tool(\n    name=\"vision_read_vscode_problems\",\n    group=\"vision\",\n"
+      }
+    ],
+    "toolSummary": "Edit vision_tools.py",
+    "toolAction": "Editing vision_tools.py"
+  },
+  {
+    "TargetFile": "e:\\KLAUSE\\app\\tools\\vscode_tools.py",
+    "Instruction": "Add group to tools",
+    "Description": "Add group parameter",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "StartLine": 17,
+        "EndLine": 18,
+        "TargetContent": "@tool(\n    name=\"vscode_open_project\",\n",
+        "ReplacementContent": "@tool(\n    name=\"vscode_open_project\",\n    group=\"terminal\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 44,
+        "EndLine": 45,
+        "TargetContent": "@tool(\n    name=\"vscode_open_file\",\n",
+        "ReplacementContent": "@tool(\n    name=\"vscode_open_file\",\n    group=\"terminal\",\n"
+      }
+    ],
+    "toolSummary": "Edit vscode_tools.py",
+    "toolAction": "Editing vscode_tools.py"
+  },
+  {
+    "TargetFile": "e:\\KLAUSE\\app\\tools\\window_tools.py",
+    "Instruction": "Add group to tools",
+    "Description": "Add group parameter",
+    "ReplacementChunks": [
+      {
+        "AllowMultiple": false,
+        "StartLine": 13,
+        "EndLine": 14,
+        "TargetContent": "@tool(\n    name=\"list_open_windows\",\n",
+        "ReplacementContent": "@tool(\n    name=\"list_open_windows\",\n    group=\"window\",\n"
+      },
+      {
+        "AllowMultiple": false,
+        "StartLine": 54,
+        "EndLine": 55,
+        "TargetContent": "@tool(\n    name=\"focus_window\",\n",
+        "ReplacementContent": "@tool(\n    name=\"focus_window\",\n    group=\"window\",\n"
+      }
+    ],
+    "toolSummary": "Edit window_tools.py",
+    "toolAction": "Editing window_tools.py"
+  }
+]

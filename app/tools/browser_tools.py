@@ -6,6 +6,7 @@ from app.agents.github_client import GitHubClient
 
 @tool(
     name="browser_open",
+    group="browser",
     description=(
         "Opens any URL or website in the CDP-attached real-profile browser. "
         "If a plain query/word is provided instead of a URL (e.g. 'wikipedia' or 'gmail'), "
@@ -31,6 +32,7 @@ def browser_open(url: str, headless: bool = False) -> str:
 
 @tool(
     name="desktop_open_url",
+    group="browser",
     description="Opens any URL or website in the user's default desktop web browser (e.g. Chrome, Brave). Use this when the user wants to open/view a website or video on their own screen. Arguments: url (str)."
 )
 def desktop_open_url(url: str) -> str:
@@ -47,46 +49,58 @@ def desktop_open_url(url: str) -> str:
 
 @tool(
     name="browser_read",
+    group="browser",
     description="Extracts clean inner text from a page selector in the active session. Arguments: selector (str, default 'body')."
 )
-def browser_read(selector: str = "body") -> str:
+def browser_read(selector: str = "body", **kwargs) -> str:
     """Read contents of page selector."""
+    if selector == "body" and "element" in kwargs:
+        selector = kwargs["element"]
     agent = get_browser_agent()
     return agent.read_page(selector)
 
 
 @tool(
     name="browser_click",
+    group="browser",
     description=(
         "Clicks an element specified by the CSS selector, raw text match, or ARIA accessibility role name. "
         "Arguments: selector (str - optional), text (str - optional), description (str - optional)."
     )
 )
-def browser_click(selector: str = "", text: str = "", description: str = "") -> str:
+def browser_click(selector: str = "", text: str = "", description: str = "", **kwargs) -> str:
     """Click element on page."""
+    if not selector and "element" in kwargs:
+        selector = kwargs["element"]
     agent = get_browser_agent()
     return agent.click(selector=selector, text=text, description=description)
 
 
 @tool(
     name="browser_fill",
+    group="browser",
     description=(
         "Fills an input form field matching selector with the provided value. "
         "KLAUSE will automatically refuse to type if it detects a password field. "
         "Arguments: selector (str), value (str)."
     )
 )
-def browser_fill(selector: str, value: str) -> str:
+def browser_fill(selector: str = "", value: str = "", **kwargs) -> str:
     """Fill input field on page."""
+    if not selector and "element" in kwargs:
+        selector = kwargs["element"]
+    if not value and "text" in kwargs:
+        value = kwargs["text"]
     agent = get_browser_agent()
     return agent.fill_form(selector, value)
 
 
 @tool(
     name="browser_screenshot",
+    group="browser",
     description="Captures a screenshot of the active viewport. Arguments: output_name (str, default 'screenshot.png')."
 )
-def browser_screenshot(output_name: str = "screenshot.png") -> str:
+def browser_screenshot(output_name: str = "screenshot.png", **kwargs) -> str:
     """Take page screenshot."""
     agent = get_browser_agent()
     return agent.screenshot(output_name)
@@ -94,6 +108,7 @@ def browser_screenshot(output_name: str = "screenshot.png") -> str:
 
 @tool(
     name="browser_get_url_and_title",
+    group="browser",
     description="Retrieves the current URL and title of the active page session. No arguments required."
 )
 def browser_get_url_and_title() -> str:
@@ -104,6 +119,7 @@ def browser_get_url_and_title() -> str:
 
 @tool(
     name="browser_close",
+    group="browser",
     description="Closes the active browser session and cleans up resources. No arguments required."
 )
 def browser_close() -> str:
@@ -117,6 +133,7 @@ def browser_close() -> str:
 
 @tool(
     name="browser_parse_html",
+    group="browser",
     description=(
         "Queries elements inside the live rendered DOM via JavaScript using selectors. "
         "Falls back to BeautifulSoup parser. "
@@ -124,17 +141,27 @@ def browser_close() -> str:
         "attribute (str - optional, 'href'|'text'|'src', default 'href'), limit (int - optional, default 5)."
     )
 )
-def browser_parse_html(selector: str = "", known_key: str = "", attribute: str = "href", limit: int = 5) -> str:
+def browser_parse_html(selector: str = "", known_key: str = "", attribute: str = "href", limit: int = 5, **kwargs) -> str:
     """Query live DOM using selectors."""
+    # Self-healing parameter mapping for common LLM hallucinations
+    if not known_key and "key" in kwargs:
+        known_key = kwargs["key"]
+    if "index" in kwargs:
+        try:
+            limit = int(kwargs["index"]) + 1
+        except Exception:
+            pass
+            
     agent = get_browser_agent()
     return agent.parse_html(selector=selector, known_key=known_key, attribute=attribute, limit=limit)
 
 
 @tool(
     name="browser_wait_for_content",
+    group="browser",
     description="Waits for the page's DOMContentLoaded state. Arguments: timeout_ms (int - optional, default 5000)."
 )
-def browser_wait_for_content(timeout_ms: int = 5000) -> str:
+def browser_wait_for_content(timeout_ms: int = 5000, **kwargs) -> str:
     """Wait for DOMContentLoaded state."""
     agent = get_browser_agent()
     return agent.wait_for_content(timeout_ms=timeout_ms)
@@ -142,12 +169,13 @@ def browser_wait_for_content(timeout_ms: int = 5000) -> str:
 
 @tool(
     name="browser_get_text",
+    group="browser",
     description=(
         "Strips navigation/footer/sidebar boilerplate noise and retrieves cleaned semantic text from the page. "
         "Arguments: max_chars (int - optional, default 6000), selector (str - optional, default 'body')."
     )
 )
-def browser_get_text(max_chars: int = 6000, selector: str = "body") -> str:
+def browser_get_text(max_chars: int = 6000, selector: str = "body", **kwargs) -> str:
     """Extract semantic text content from page."""
     agent = get_browser_agent()
     return agent.get_text(max_chars=max_chars, selector=selector)
@@ -155,20 +183,24 @@ def browser_get_text(max_chars: int = 6000, selector: str = "body") -> str:
 
 @tool(
     name="browser_vision_read",
+    group="browser",
     description=(
         "Screenshots the viewport and submits a natural language question about the page to Gemini Vision. "
         "Use this as a fallback when DOM extraction fails. "
         "Arguments: question (str)."
     )
 )
-def browser_vision_read(question: str) -> str:
+def browser_vision_read(question: str = "", **kwargs) -> str:
     """Analyze page visually using Gemini Vision."""
+    if not question and "prompt" in kwargs:
+        question = kwargs["prompt"]
     agent = get_browser_agent()
     return agent.vision_read(question)
 
 
 @tool(
     name="browser_scroll",
+    group="browser",
     description="Scrolls page viewport mouse wheel. Arguments: direction (str, 'up'|'down', default 'down'), amount (int - optional, default 500)."
 )
 def browser_scroll(direction: str = "down", amount: int = 500) -> str:
@@ -179,6 +211,7 @@ def browser_scroll(direction: str = "down", amount: int = 500) -> str:
 
 @tool(
     name="browser_press",
+    group="browser",
     description="Presses a keyboard key on the active window. Arguments: key (str, e.g. 'Enter', 'Tab', 'Escape')."
 )
 def browser_press(key: str) -> str:
@@ -189,6 +222,7 @@ def browser_press(key: str) -> str:
 
 @tool(
     name="browser_type",
+    group="browser",
     description=(
         "Types arbitrary text into the currently focused element using keyboard simulation. "
         "Use this after clicking/focusing a contenteditable div or input field. "
@@ -204,6 +238,7 @@ def browser_type(text: str, delay: int = 30) -> str:
 
 @tool(
     name="browser_upload_file",
+    group="browser",
     description=(
         "Uploads a local file to an <input type='file'> element on the page. "
         "This bypasses the OS file picker dialog entirely — no clipboard or manual interaction needed. "
@@ -218,6 +253,7 @@ def browser_upload_file(selector: str, file_path: str) -> str:
 
 @tool(
     name="browser_list_tabs",
+    group="browser",
     description="Lists all currently open tabs (index, URL, title) in the active browser context. No arguments required."
 )
 def browser_list_tabs() -> str:
@@ -234,6 +270,7 @@ def browser_list_tabs() -> str:
 
 @tool(
     name="browser_new_tab",
+    group="browser",
     description="Opens a new page tab in the active context. Arguments: url (str - optional)."
 )
 def browser_new_tab(url: str = "") -> str:
@@ -244,6 +281,7 @@ def browser_new_tab(url: str = "") -> str:
 
 @tool(
     name="browser_close_tab",
+    group="browser",
     description="Closes the page tab matching the given index. Arguments: index (int - optional, default -1 closes active tab)."
 )
 def browser_close_tab(index: int = -1) -> str:
@@ -254,6 +292,7 @@ def browser_close_tab(index: int = -1) -> str:
 
 @tool(
     name="browser_switch_tab",
+    group="browser",
     description="Switches the active tab view focus to the given tab index. Arguments: index (int)."
 )
 def browser_switch_tab(index: int) -> str:
@@ -266,6 +305,7 @@ def browser_switch_tab(index: int) -> str:
 
 @tool(
     name="github_get_issues",
+    group="browser",
     description="Retrieves issues for a public GitHub repository. Arguments: repo (str, format 'owner/repo'). Optional: state (str, 'open' or 'closed', default 'open'), limit (int, default 30)."
 )
 def github_get_issues(repo: str, state: str = "open", limit: int = 30) -> str:
@@ -286,6 +326,7 @@ def github_get_issues(repo: str, state: str = "open", limit: int = 30) -> str:
 
 @tool(
     name="github_get_prs",
+    group="browser",
     description="Retrieves Pull Requests for a public GitHub repository. Arguments: repo (str, format 'owner/repo'). Optional: state (str, 'open' or 'closed', default 'open'), limit (int, default 30)."
 )
 def github_get_prs(repo: str, state: str = "open", limit: int = 30) -> str:
@@ -306,6 +347,7 @@ def github_get_prs(repo: str, state: str = "open", limit: int = 30) -> str:
 
 @tool(
     name="github_get_commits",
+    group="browser",
     description="Retrieves commits for a public GitHub repository. Arguments: repo (str, format 'owner/repo'). Optional: limit (int, default 30)."
 )
 def github_get_commits(repo: str, limit: int = 30) -> str:

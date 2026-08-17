@@ -8,6 +8,7 @@ from app.memory.knowledge_base import get_knowledge_base
 
 @tool(
     name="configure_obsidian_vault",
+    group="memory",
     description="Registers or updates the directory path to the user's local Obsidian note vault. Arguments: vault_path (str)."
 )
 def configure_obsidian_vault(vault_path: str) -> str:
@@ -29,6 +30,7 @@ def configure_obsidian_vault(vault_path: str) -> str:
 
 @tool(
     name="sync_obsidian_vault",
+    group="memory",
     description="Manually triggers a scan and sync of the configured Obsidian note vault, importing any new/edited files and clearing deleted files. Arguments: none."
 )
 def sync_obsidian_vault() -> str:
@@ -50,6 +52,7 @@ def sync_obsidian_vault() -> str:
 
 @tool(
     name="search_obsidian_notes",
+    group="memory",
     description="Semantically searches all indexed notes inside the user's Obsidian Vault for related concepts. Arguments: query (str)."
 )
 def search_obsidian_notes(query: str) -> str:
@@ -82,6 +85,7 @@ def search_obsidian_notes(query: str) -> str:
 
 @tool(
     name="create_obsidian_note",
+    group="memory",
     description="Creates a new markdown note in the Obsidian Vault. You can write task guides, research, code walktroughs, and daily logs here. Arguments: title (str), content (str), folder (str, optional)."
 )
 def create_obsidian_note(title: str, content: str, folder: str = "") -> str:
@@ -100,6 +104,7 @@ def create_obsidian_note(title: str, content: str, folder: str = "") -> str:
 
 @tool(
     name="append_obsidian_note",
+    group="memory",
     description="Appends text content to an existing Obsidian note. This is useful for building up logs or appending new sections to existing files. Arguments: title (str), content (str)."
 )
 def append_obsidian_note(title: str, content: str) -> str:

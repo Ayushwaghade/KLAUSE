@@ -2,7 +2,7 @@ import sys
 from loguru import logger
 from app.config.config import settings
 
-def setup_logging():
+def setup_logging(cli_mode: bool = False):
     # Remove default handler
     logger.remove()
     
@@ -15,10 +15,14 @@ def setup_logging():
             
     logger.configure(patcher=patcher)
     
+    # If in interactive CLI mode, only log WARNING or higher to stderr
+    # to avoid polluting the chat conversation.
+    stdout_level = "WARNING" if cli_mode else settings.log_level
+    
     # Add stdout handler with rich coloring
     logger.add(
         sys.stdout,
-        level=settings.log_level,
+        level=stdout_level,
         format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
     )
     
@@ -33,4 +37,4 @@ def setup_logging():
         format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
     )
     
-    logger.info("Logging initialized.")
+    logger.info(f"Logging initialized. CLI Mode: {cli_mode}")

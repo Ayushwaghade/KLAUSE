@@ -12,6 +12,7 @@ except ImportError:
 
 @tool(
     name="list_open_windows",
+    group="window",
     description="Lists the titles of all currently visible open application windows on the desktop (caps at 30 items).",
     destructive=False
 )
@@ -53,6 +54,7 @@ def list_open_windows() -> str:
 
 @tool(
     name="focus_window",
+    group="window",
     description="Brings a visible application window to the foreground by matching its title. Argument: title (str).",
     destructive=False
 )

@@ -5,6 +5,7 @@ from app.memory.memory_manager import get_memory_manager
 
 @tool(
     name="save_note",
+    group="memory",
     description="Saves a personal note to KLAUSE's long-term semantic memory. Argument: content (str), tags (str, comma-separated, optional).",
     destructive=False
 )
@@ -20,6 +21,7 @@ def save_note(content: str, tags: str = "") -> str:
 
 @tool(
     name="save_research",
+    group="memory",
     description="Saves research content or webpage text to KLAUSE's memory. Arguments: title (str), content (str), source_url (str, optional), tags (str, optional).",
     destructive=False
 )
@@ -35,6 +37,7 @@ def save_research(title: str, content: str, source_url: str = "", tags: str = ""
 
 @tool(
     name="search_memory",
+    group="memory",
     description="Searches long-term memory (notes and research) semantically using natural language queries. Argument: query (str).",
     destructive=False
 )

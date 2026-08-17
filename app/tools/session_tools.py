@@ -35,6 +35,7 @@ def _save_session_settings(settings: dict):
 
 @tool(
     name="get_session_data_folder",
+    group="core",
     description="Returns the currently active session data folder path. Argument: none."
 )
 def get_session_data_folder() -> str:
@@ -47,6 +48,7 @@ def get_session_data_folder() -> str:
 
 @tool(
     name="set_session_data_folder",
+    group="core",
     description="Configures and creates a dedicated data folder for the current session. All downloads and output files will be stored here. Arguments: path (str)."
 )
 def set_session_data_folder(path: str) -> str:
@@ -76,6 +78,7 @@ def set_session_data_folder(path: str) -> str:
 
 @tool(
     name="list_last_used_data_folder",
+    group="core",
     description="Retrieves the path of the last used session data folder. Useful for prompting the user to reuse it. Argument: none."
 )
 def list_last_used_data_folder() -> str:

@@ -4,6 +4,7 @@ from app.tools.base import tool
 
 @tool(
     name="clipboard_get_text",
+    group="filesystem",
     description="Retrieves the current text content from the system clipboard.",
     destructive=False
 )
@@ -24,6 +25,7 @@ def clipboard_get_text() -> str:
 
 @tool(
     name="clipboard_set_text",
+    group="filesystem",
     description="Writes text content to the system clipboard, overwriting existing clipboard content. Argument: text (str).",
     destructive=True
 )

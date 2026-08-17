@@ -16,6 +16,7 @@ def check_vscode_available() -> bool:
 
 @tool(
     name="vscode_open_project",
+    group="terminal",
     description="Opens VS Code in the specified directory. Argument: path (str).",
     destructive=False
 )
@@ -43,6 +44,7 @@ def vscode_open_project(path: str) -> str:
 
 @tool(
     name="vscode_open_file",
+    group="terminal",
     description="Opens a file in the active VS Code editor. Argument: file_path (str). Uses 'code -g' format.",
     destructive=False
 )

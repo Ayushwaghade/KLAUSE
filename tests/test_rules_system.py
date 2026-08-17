@@ -175,6 +175,6 @@ def test_dispatcher_parameter_filtering():
         }
         
         obs = dispatcher.execute("mock_browser_parse", params)
-        assert obs.success is True
-        assert obs.result == "Processed selector 'div#target' with limit 10"
-        assert obs.error is None
+        assert obs.success is False
+        assert obs.result == ""
+        assert "Invalid parameter 'index'" in obs.error

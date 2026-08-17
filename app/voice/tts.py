@@ -18,10 +18,11 @@ def truncate_sentences(text: str, max_sentences: int) -> str:
     Split text into sentences and truncate to first N sentences.
     """
     # Simple regex split on sentence endings (.!? followed by whitespace)
-    sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+    cleaned = text.strip()
+    sentences = re.split(r'(?<=[.!?])\s+', cleaned)
     if len(sentences) > max_sentences:
         return " ".join(sentences[:max_sentences]) + " ..."
-    return text
+    return cleaned
 
 class TTSEngine:
     def __init__(self):
@@ -69,7 +70,7 @@ class TTSEngine:
         clean_text = re.sub(r'[\*\#\`\-\_]', '', text)
         
         # Strip "Task complete" status variations from spoken text (user wants it typed only)
-        clean_text = re.sub(r'(?i)\b[\[\(]?task\s+complete[\]\)]?[\.\!\?]?\s*', '', clean_text)
+        clean_text = re.sub(r'(?i)[\[\(]?\btask\s+complete[\]\)]?[\.\!\?]?\s*', '', clean_text).strip()
         
         # If the remaining text contains no words/alphanumerics, do not queue speak
         if not clean_text.strip() or not re.search(r'\w', clean_text):

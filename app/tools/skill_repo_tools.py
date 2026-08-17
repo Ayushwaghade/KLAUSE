@@ -3,6 +3,7 @@ from app.core import skill_repo
 
 @tool(
     name="import_skills_repo",
+    group="automation",
     description="Clones or updates the GitHub skills repository (claude-skills) and rebuilds the metadata index. Arguments: repo_url (str - optional)."
 )
 def import_skills_repo(repo_url: str = "https://github.com/alirezarezvani/claude-skills") -> str:
@@ -15,6 +16,7 @@ def import_skills_repo(repo_url: str = "https://github.com/alirezarezvani/claude
 
 @tool(
     name="load_skill",
+    group="automation",
     description="Loads the complete instruction guide for a specific expert skill. Arguments: skill_name (str)."
 )
 def load_skill(skill_name: str) -> str:
@@ -26,6 +28,7 @@ def load_skill(skill_name: str) -> str:
 
 @tool(
     name="list_skills",
+    group="automation",
     description="Lists all currently available expert skills with their descriptions. Argument: none."
 )
 def list_skills() -> str:

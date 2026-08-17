@@ -7,6 +7,7 @@ from app.vision import error_reader
 
 @tool(
     name="vision_capture_screen",
+    group="vision",
     description="Captures a fullscreen screenshot of the primary monitor and saves it to data/screenshots/. Arguments: monitor (int - default 1)."
 )
 def vision_capture_screen(monitor: int = 1) -> str:
@@ -19,6 +20,7 @@ def vision_capture_screen(monitor: int = 1) -> str:
 
 @tool(
     name="vision_capture_window",
+    group="vision",
     description="Locates an active window matching a title substring (e.g., 'chrome', 'vscode') and captures a screenshot of it. Arguments: window_title (str)."
 )
 def vision_capture_window(window_title: str) -> str:
@@ -32,6 +34,7 @@ def vision_capture_window(window_title: str) -> str:
 
 @tool(
     name="vision_capture_region",
+    group="vision",
     description="Captures a specific bounding area of the screen. Arguments: x (int), y (int), width (int), height (int)."
 )
 def vision_capture_region(x: int, y: int, width: int, height: int) -> str:
@@ -44,6 +47,7 @@ def vision_capture_region(x: int, y: int, width: int, height: int) -> str:
 
 @tool(
     name="vision_ocr_screen",
+    group="vision",
     description="Captures the full screen and extracts all visible text content using Tesseract OCR. Argument: none."
 )
 def vision_ocr_screen() -> str:
@@ -54,6 +58,7 @@ def vision_ocr_screen() -> str:
 
 @tool(
     name="vision_ocr_region",
+    group="vision",
     description="Extracts visible text from a specific screen region using Tesseract OCR. Arguments: x (int), y (int), width (int), height (int)."
 )
 def vision_ocr_region(x: int, y: int, width: int, height: int) -> str:
@@ -63,6 +68,7 @@ def vision_ocr_region(x: int, y: int, width: int, height: int) -> str:
 
 @tool(
     name="vision_analyze",
+    group="vision",
     description="Captures the fullscreen and sends it to Gemini multimodal vision API along with a custom prompt query. Arguments: prompt (str)."
 )
 def vision_analyze(prompt: str) -> str:
@@ -73,6 +79,7 @@ def vision_analyze(prompt: str) -> str:
 
 @tool(
     name="vision_describe_screen",
+    group="vision",
     description="Captures the fullscreen and uses Gemini Vision to provide a detailed description of all visible content. Argument: none."
 )
 def vision_describe_screen() -> str:
@@ -82,6 +89,7 @@ def vision_describe_screen() -> str:
 
 @tool(
     name="vision_detect_errors",
+    group="vision",
     description="Captures the screen and uses Gemini Vision to detect and diagnose visible warnings, logs, terminal exceptions, or compiler errors. Argument: none."
 )
 def vision_detect_errors() -> str:
@@ -92,6 +100,7 @@ def vision_detect_errors() -> str:
 
 @tool(
     name="vision_read_terminal",
+    group="vision",
     description="Captures a terminal window matching the title, extracts text via OCR, and filters for lines containing error tags. Arguments: window_title (str - default 'terminal')."
 )
 def vision_read_terminal(window_title: str = "terminal") -> str:
@@ -100,6 +109,7 @@ def vision_read_terminal(window_title: str = "terminal") -> str:
 
 @tool(
     name="vision_read_vscode_problems",
+    group="vision",
     description="Captures the VS Code editor window, runs OCR, and extracts any visible code problems or compiler issues. Argument: none."
 )
 def vision_read_vscode_problems() -> str:

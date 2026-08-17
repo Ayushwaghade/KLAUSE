@@ -7,6 +7,7 @@ from app.core.context import context
 
 @tool(
     name="open_application",
+    group="window",
     description="Launches a registered desktop application from the allowed list. Argument: app_key (str).",
     destructive=False
 )
@@ -46,6 +47,7 @@ def open_application(app_key: str) -> str:
 
 @tool(
     name="request_user_confirmation",
+    group="window",
     description="Ask the user for explicit confirmation or permission to perform an action. Returns 'User approved: Yes' or 'User approved: No'. Use this before critical or destructive actions, or if rules mandate user approval.",
     destructive=False
 )

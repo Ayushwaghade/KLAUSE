@@ -83,7 +83,7 @@ class EventMonitorThread(threading.Thread):
                 elapsed = time.time() - self.pending_window_start_time
                 if elapsed >= debounce_time:
                     # Stabilized! Emit the event
-                    logger.info(f"Active window stabilized: '{active_title}' after {debounce_time}s debounce.")
+                    logger.debug(f"Active window stabilized: '{active_title}' after {debounce_time}s debounce.")
                     self.last_window_title = active_title
                     self.pending_window_title = ""
                     

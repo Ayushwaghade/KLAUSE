@@ -14,8 +14,9 @@ from app.core.state_machine import state_machine
 from app.voice.voice_manager import VoiceManager, voice_input_queue
 from app.voice.voice_typer import LiveVoiceTyper
 
-# Initialize logger
-setup_logging()
+# Initialize logger early based on command line arguments
+cli_mode = "--server" not in sys.argv
+setup_logging(cli_mode=cli_mode)
 
 console = Console()
 brain = Brain()
@@ -120,8 +121,32 @@ def main():
                     scheduler.stop()
                     break
                     
-                response = brain.think(user_input, session_id=session_id)
-                console.print(f"[bold cyan]KLAUSE:[/bold cyan] {response}\n")
+                # Beautiful console step-by-step progress tracking callback
+                def terminal_step_callback(step_data):
+                    if step_data["type"] == "thought":
+                        step_num = step_data["step"]
+                        thought = step_data["thought"]
+                        action = step_data["action"]
+                        # Truncate thought description to fit clean terminal display
+                        disp_thought = thought if len(thought) < 70 else thought[:67] + "..."
+                        console.print(f"  [bold yellow]└─ Step {step_num}[/bold yellow] thought: {disp_thought}")
+                        if action != "FINAL":
+                            # Extract simplified parameters for logging display
+                            disp_params = {k: (v if len(str(v)) < 40 else str(v)[:37] + "...") for k, v in step_data["params"].items()}
+                            console.print(f"     [bold blue]⚙ Calling tool:[/bold blue] [bold cyan]{action}[/bold cyan] with params: {disp_params}")
+                    elif step_data["type"] == "observation":
+                        obs = step_data["observation"]
+                        step_num = step_data["step"]
+                        if obs["success"]:
+                            res_str = str(obs["result"]).strip()
+                            disp_res = res_str if len(res_str) < 80 else res_str[:77] + "..."
+                            console.print(f"     [bold green]✔ Observation success:[/bold green] {disp_res}")
+                        else:
+                            console.print(f"     [bold red]✖ Observation failure:[/bold red] {obs['error']}")
+
+                console.print(f"\n[bold yellow]Thinking...[/bold yellow]")
+                response = brain.think(user_input, session_id=session_id, step_callback=terminal_step_callback)
+                console.print(f"\n[bold cyan]KLAUSE:[/bold cyan] {response}\n")
                 
                 # Speak response back to user
                 if voice_manager.enabled:
