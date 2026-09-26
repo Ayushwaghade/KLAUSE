@@ -10,9 +10,15 @@ from app.tools.base import tool
 def read_file(path: str) -> str:
     """Reads a file and returns its content."""
     try:
-        if not os.path.exists(path):
+        from app.core.context import context
+        if not os.path.isabs(path) and context.current_project_path:
+            resolved_path = os.path.abspath(os.path.join(context.current_project_path, path))
+        else:
+            resolved_path = os.path.abspath(path)
+            
+        if not os.path.exists(resolved_path):
             return f"Error: File '{path}' does not exist."
-        with open(path, "r", encoding="utf-8") as f:
+        with open(resolved_path, "r", encoding="utf-8") as f:
             return f.read()
     except Exception as e:
         return f"Error reading file '{path}': {e}"
@@ -25,13 +31,19 @@ def read_file(path: str) -> str:
 def write_file(path: str, content: str, confirm_fn: Optional[Callable[[str], bool]] = None) -> str:
     """Writes content to a file. Prompts confirmation if overwriting."""
     try:
+        from app.core.context import context
+        if not os.path.isabs(path) and context.current_project_path:
+            resolved_path = os.path.abspath(os.path.join(context.current_project_path, path))
+        else:
+            resolved_path = os.path.abspath(path)
+            
         # Create parent directories if they don't exist
-        parent = os.path.dirname(path)
+        parent = os.path.dirname(resolved_path)
         if parent and not os.path.exists(parent):
             os.makedirs(parent, exist_ok=True)
             
         # Check overwrite safety
-        if os.path.exists(path):
+        if os.path.exists(resolved_path):
             if confirm_fn:
                 approved = confirm_fn(f"File '{path}' already exists. Overwrite?")
                 if not approved:
@@ -39,7 +51,7 @@ def write_file(path: str, content: str, confirm_fn: Optional[Callable[[str], boo
             else:
                 return f"Error: File '{path}' exists and no confirmation callback was provided."
                 
-        with open(path, "w", encoding="utf-8") as f:
+        with open(resolved_path, "w", encoding="utf-8") as f:
             f.write(content)
         return f"Success: Content written to '{path}'."
     except Exception as e:
@@ -332,4 +344,19 @@ def download_image(query: str, dest_path: str) -> str:
         logger.error(f"StockSnap image search failed: {e}")
 
     return f"Error: Could not find or download any free image matching '{query}' from available providers."
+
+@tool(
+    name="show_disposition",
+    group="filesystem",
+    description="Returns a JSON representation of the currently active merged disposition configuration."
+)
+def show_disposition() -> str:
+    """Helper tool to inspect the active parsed disposition settings."""
+    from app.config.disposition import DispositionConfig
+    from app.core.context import context
+    import json
+    
+    disp = DispositionConfig.load_from_workspace(context.current_project_path)
+    return json.dumps(disp.model_dump(), indent=2)
+
 

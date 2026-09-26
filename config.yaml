@@ -5,10 +5,23 @@ klause:
   personality: "hacker"
 
 ai:
-  gemini_model: gemini-3.1-flash-lite-preview
-  embedding_model: models/embedding-001
+  # gemini_model: gemini-3.1-flash-lite-preview
+  # embedding_model: models/embedding-001
+  # max_tokens: 8192
+  # max_steps: 10
+  provider: "nvidia"
+  nvidia_model: "nvidia/nemotron-3-ultra-550b-a55b"
+  nvidia_base_url: "https://integrate.api.nvidia.com/v1"
+  embedding_model: "models/embedding-001"
   max_tokens: 8192
   max_steps: 10
+
+  # Dynamic Model Routing
+  routing_enabled: true
+  fast_provider: "gemini"
+  fast_model: "gemini-3.1-flash-lite-preview"
+  complex_provider: "nvidia"
+  complex_model: "nvidia/nemotron-3-ultra-550b-a55b"
 
 memory:
   mongo_uri: mongodb://localhost:27017/
@@ -34,7 +47,7 @@ google_search_api_key: ""
 google_search_cx: ""
 
 # Serper API Key (optional, falls back to DuckDuckGo if blank)
-serper_api_key: "ec6553678ae1c5077c5557071b7f4ba76f08797a"
+serper_api_key: ""
 
 paths:
   knowledge_base: ./knowledge_base
@@ -64,4 +77,4 @@ automation:
 
 browser:
   prefer: brave
-  profile_directory: "Default"  # Specify your main profile directory (e.g. "Default", "Profile 1") to bypass the profile picker screen
+  profile_directory: "Default" # Specify your main profile directory (e.g. "Default", "Profile 1") to bypass the profile picker screen

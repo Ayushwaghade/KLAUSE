@@ -12,10 +12,20 @@ class KlauseSettings(BaseModel):
     personality: str = "supportive"
 
 class AISettings(BaseModel):
+    provider: str = "gemini"
     gemini_model: str = "gemini-3.1-flash-lite-preview"
+    nvidia_model: str = "nvidia/nemotron-3.5-lightning-30b-a3b"
+    nvidia_base_url: str = "https://integrate.api.nvidia.com/v1"
     embedding_model: str = "models/embedding-001"
     max_tokens: int = 8192
     max_steps: int = 10
+    
+    # Model routing settings
+    routing_enabled: bool = False
+    fast_provider: str = "gemini"
+    fast_model: str = "gemini-3.1-flash-lite-preview"
+    complex_provider: str = "nvidia"
+    complex_model: str = "nvidia/nemotron-3-ultra-550b-a55b"
 
 class MemorySettings(BaseModel):
     mongo_uri: str = "mongodb://localhost:27017/"
@@ -74,6 +84,7 @@ class AppConfig(BaseSettings):
 
     # Environment variables mapped from .env
     gemini_api_key: Optional[str] = Field(None, validation_alias="GEMINI_API_KEY")
+    nvidia_api_key: Optional[str] = Field(None, validation_alias="NVIDIA_API_KEY")
     local_only: bool = Field(False, validation_alias="LOCAL_ONLY")
     log_level: str = Field("INFO", validation_alias="LOG_LEVEL")
     mongo_uri: Optional[str] = Field(None, validation_alias="MONGO_URI")

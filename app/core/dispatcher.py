@@ -85,15 +85,7 @@ class Dispatcher:
                 if name in sig.parameters or has_var_keyword:
                     kwargs[name] = val
                 else:
-                    valid_params = [p for p in sig.parameters.keys() if p not in ("confirm_fn", "self", "args", "kwargs")]
-                    error_msg = f"Error: Invalid parameter '{name}' passed to tool '{tool_name}'. Valid parameters are: {', '.join(valid_params)}"
-                    logger.error(error_msg)
-                    return ToolObservation(
-                        tool_name=tool_name,
-                        success=False,
-                        result="",
-                        error=error_msg
-                    )
+                    logger.warning(f"Ignored unrecognized parameter '{name}' passed to tool '{tool_name}'.")
             
             # Inject confirmation callback if accepted by the tool signature
             if "confirm_fn" in sig.parameters:

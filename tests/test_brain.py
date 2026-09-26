@@ -56,8 +56,10 @@ def test_brain_react_loop():
     
     mock_gemini_client.models.generate_content.side_effect = [res1, res2]
 
+    from app.config.config import settings
     # Patch the Client class initialization to return our mocked client
-    with patch("app.core.brain.genai.Client", return_value=mock_gemini_client):
+    with patch.object(settings.ai, "provider", "gemini"), \
+         patch("app.core.brain.genai.Client", return_value=mock_gemini_client):
         brain = Brain(dispatcher=mock_dispatcher)
         # Force connected state for unit testing
         brain.is_connected = True
@@ -90,7 +92,9 @@ def test_brain_self_healing_parameters():
     
     mock_gemini_client.models.generate_content.side_effect = [res1, res2]
 
-    with patch("app.core.brain.genai.Client", return_value=mock_gemini_client):
+    from app.config.config import settings
+    with patch.object(settings.ai, "provider", "gemini"), \
+         patch("app.core.brain.genai.Client", return_value=mock_gemini_client):
         brain = Brain(dispatcher=mock_dispatcher)
         brain.is_connected = True
         brain.client = mock_gemini_client

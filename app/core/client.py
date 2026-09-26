@@ -19,3 +19,23 @@ def get_gemini_client() -> Optional[genai.Client]:
             except Exception as e:
                 logger.error(f"Failed to create shared Gemini Client: {e}")
     return _shared_client
+
+_shared_nvidia_client = None
+
+def get_nvidia_client() -> Optional[any]:
+    """Helper to return a shared OpenAI client configured for NVIDIA integrate endpoints."""
+    global _shared_nvidia_client
+    if _shared_nvidia_client is None:
+        api_key = settings.nvidia_api_key or os.environ.get("NVIDIA_API_KEY")
+        if api_key:
+            try:
+                from openai import OpenAI
+                _shared_nvidia_client = OpenAI(
+                    base_url=settings.ai.nvidia_base_url,
+                    api_key=api_key
+                )
+                logger.info("Shared NVIDIA OpenAI Client successfully created.")
+            except Exception as e:
+                logger.error(f"Failed to create shared NVIDIA client: {e}")
+    return _shared_nvidia_client
+

@@ -169,19 +169,29 @@ class SessionContext:
                 loop
             )
             logger.info(f"SessionContext: Dispatched confirmation prompt to session {session_id}: {prompt}")
+            
+            # Wait up to 5 minutes for user reply
+            completed = event.wait(timeout=300.0)
+            
+            # Clean up structures
+            self._confirmation_events.pop(session_id, None)
+            approved = self._confirmation_responses.pop(req_id, False)
+            
+            logger.info(f"SessionContext: Confirmation resolved for session {session_id} with result approved={approved} (timeout={not completed})")
+            return approved
         else:
-            logger.warning(f"SessionContext: No active WebSocket connection for session {session_id}. Denying permission.")
-            return False
-
-        # Wait up to 5 minutes for user reply
-        completed = event.wait(timeout=300.0)
-        
-        # Clean up structures
-        self._confirmation_events.pop(session_id, None)
-        approved = self._confirmation_responses.pop(req_id, False)
-        
-        logger.info(f"SessionContext: Confirmation resolved for session {session_id} with result approved={approved} (timeout={not completed})")
-        return approved
+            logger.info(f"SessionContext: No active WebSocket connection for session {session_id}. Falling back to CLI console confirmation.")
+            # Clean up events since we didn't use them
+            self._confirmation_events.pop(session_id, None)
+            try:
+                print(f"\n[CONFIRMATION REQUIRED]: {prompt}")
+                response = input("Approve? (y/N): ").strip().lower()
+                approved = response in ("y", "yes")
+                logger.info(f"SessionContext: CLI confirmation resolved with result approved={approved}")
+                return approved
+            except Exception as e:
+                logger.error(f"SessionContext: Exception during CLI confirmation check: {e}")
+                return False
 
     def resolve_confirmation(self, session_id: str, approved: bool):
         pair = self._confirmation_events.get(session_id)
