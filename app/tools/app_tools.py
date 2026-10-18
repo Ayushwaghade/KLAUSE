@@ -1,5 +1,6 @@
 import os
 import subprocess
+from typing import Optional
 from loguru import logger
 from app.tools.base import tool
 from app.config.config import settings
@@ -51,14 +52,15 @@ def open_application(app_key: str) -> str:
     description="Ask the user for explicit confirmation or permission to perform an action. Returns 'User approved: Yes' or 'User approved: No'. Use this before critical or destructive actions, or if rules mandate user approval.",
     destructive=False
 )
-def request_user_confirmation(prompt: str) -> str:
+def request_user_confirmation(prompt: str = "", message: Optional[str] = None) -> str:
     """
     Suspends KLAUSE's thread execution and triggers a modal dialog on the user's UI.
     """
+    actual_prompt = prompt or message or "Do you want to proceed?"
     session_id = context.session_id
-    logger.info(f"Requesting user confirmation for session {session_id}: {prompt}")
+    logger.info(f"Requesting user confirmation for session {session_id}: {actual_prompt}")
     
-    approved = context.request_confirmation(session_id, prompt)
+    approved = context.request_confirmation(session_id, actual_prompt)
     
     if approved:
         return "User approved: Yes"

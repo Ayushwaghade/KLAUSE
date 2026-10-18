@@ -18,4 +18,5 @@ import app.tools.kb_tools         # Phase 7 Knowledge Base
 import app.tools.vision_tools     # Phase 8 Vision
 import app.tools.skill_repo_tools  # Expert Skills Ingest
 import app.tools.obsidian_tools    # Obsidian Integration
+import app.tools.desktop_tools     # Phase 10 Desktop GUI Automation
 

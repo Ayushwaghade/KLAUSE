@@ -40,6 +40,11 @@ GROUP_KEYWORDS = {
         "window", "focus", "minimize", "maximize", "switch window",
         "bring up", "foreground", "app", "application", "launch"
     ],
+    "desktop": [
+        "click", "type", "drag", "scroll", "hotkey", "shortcut",
+        "mouse", "cursor", "keyboard", "press", "key", "macro",
+        "desktop", "gui", "pixel", "ctrl+", "alt+", "win+",
+    ],
 }
 
 # Fallback escalation chains: if tools in group A fail, inject group B
@@ -47,6 +52,7 @@ FALLBACK_CHAINS = {
     "browser": "vision",
     "terminal": "filesystem",
     "filesystem": "terminal",
+    "desktop": "vision",
 }
 
 
@@ -70,6 +76,11 @@ def classify_request(user_input: str) -> List[str]:
         logger.debug(f"ToolRouter: No specific group matched for '{user_input[:50]}', including all groups.")
     else:
         logger.info(f"ToolRouter: Classified request into groups: {sorted(matched_groups)}")
+
+    # Co-activation: desktop automation works hand-in-hand with vision and window management
+    if "desktop" in matched_groups:
+        matched_groups.add("vision")
+        matched_groups.add("window")
 
     # Always include core
     matched_groups.add("core")

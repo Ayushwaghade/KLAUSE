@@ -1,12 +1,13 @@
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 import yaml
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class KlauseSettings(BaseModel):
     name: str = "KLAUSE"
+    user_name: str = "Ayush"
     version: str = "0.1.0"
     wake_word: str = "klause"
     personality: str = "supportive"
@@ -68,6 +69,9 @@ class AutomationSettings(BaseModel):
     debounce_interval_seconds: float = 0.3
     max_rules: int = 50
 
+class DesktopMacroSettings(BaseModel):
+    enabled: bool = False
+
 class AppConfig(BaseSettings):
     klause: KlauseSettings = KlauseSettings()
     ai: AISettings = AISettings()
@@ -77,7 +81,9 @@ class AppConfig(BaseSettings):
     state_machine: StateMachineSettings = StateMachineSettings()
     automation: AutomationSettings = AutomationSettings()
     browser: BrowserSettings = BrowserSettings()
+    desktop_macro: DesktopMacroSettings = DesktopMacroSettings()
     allowed_applications: dict[str, str] = Field(default_factory=dict)
+    user_name: Optional[str] = Field(None, validation_alias="USER_NAME")
     google_search_api_key: Optional[str] = Field(None, validation_alias="GOOGLE_SEARCH_API_KEY")
     google_search_cx: Optional[str] = Field(None, validation_alias="GOOGLE_SEARCH_CX")
     serper_api_key: Optional[str] = Field(None, validation_alias="SERPER_API_KEY")
@@ -96,6 +102,15 @@ class AppConfig(BaseSettings):
         extra="ignore",
         populate_by_name=True
     )
+
+    @property
+    def effective_user_name(self) -> str:
+        """Returns the user name configured in config.yaml or .env, defaulting to 'User'."""
+        if self.user_name and self.user_name.strip():
+            return self.user_name.strip()
+        if hasattr(self, "klause") and getattr(self.klause, "user_name", None):
+            return self.klause.user_name.strip()
+        return "User"
 
     @classmethod
     def load_config(cls, yaml_path: str = "config.yaml") -> "AppConfig":
@@ -126,3 +141,56 @@ class AppConfig(BaseSettings):
 
 # Global config instance
 settings = AppConfig.load_config()
+
+
+def get_config_yaml_path(yaml_path: str = "config.yaml") -> Path:
+    project_root = Path(__file__).resolve().parent.parent.parent
+    return project_root / yaml_path
+
+
+def get_yaml_config(yaml_path: str = "config.yaml") -> dict:
+    """Reads config.yaml and returns both raw text and parsed dict."""
+    file_path = get_config_yaml_path(yaml_path)
+    raw_yaml = ""
+    parsed = {}
+    if file_path.exists():
+        raw_yaml = file_path.read_text(encoding="utf-8")
+        parsed = yaml.safe_load(raw_yaml) or {}
+    return {
+        "raw_yaml": raw_yaml,
+        "config": parsed,
+        "effective_user_name": settings.effective_user_name
+    }
+
+
+def reload_config(yaml_path: str = "config.yaml") -> AppConfig:
+    """Reloads config from yaml_path and updates the global settings instance in-place."""
+    global settings
+    file_path = get_config_yaml_path(yaml_path)
+    new_settings = AppConfig.load_config(str(file_path))
+    for field in new_settings.model_fields.keys():
+        if hasattr(new_settings, field):
+            setattr(settings, field, getattr(new_settings, field))
+    return settings
+
+
+def save_yaml_config(data_or_yaml: Union[dict, str], yaml_path: str = "config.yaml") -> dict:
+    """Validates and persists updated configuration to config.yaml, then reloads settings."""
+    file_path = get_config_yaml_path(yaml_path)
+    if isinstance(data_or_yaml, str):
+        parsed = yaml.safe_load(data_or_yaml)
+        if not isinstance(parsed, dict):
+            raise ValueError("Provided YAML must represent a key-value mapping")
+        raw_yaml = data_or_yaml
+        file_path.write_text(raw_yaml, encoding="utf-8")
+    else:
+        parsed = data_or_yaml
+        raw_yaml = yaml.dump(parsed, sort_keys=False, allow_unicode=True)
+        file_path.write_text(raw_yaml, encoding="utf-8")
+
+    reload_config(yaml_path)
+    return {
+        "raw_yaml": raw_yaml,
+        "config": parsed,
+        "effective_user_name": settings.effective_user_name
+    }

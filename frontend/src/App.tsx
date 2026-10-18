@@ -2,18 +2,21 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useStore } from './store/useStore';
 import { useParallax } from './hooks/useParallax';
 import { useOrbState } from './hooks/useOrbState';
+import { useWebSocket } from './hooks/useWebSocket';
 import { ChatPage } from './pages/ChatPage';
 import { TasksPage } from './pages/TasksPage';
 import { AutomationPage } from './pages/AutomationPage';
 import { KnowledgePage } from './pages/KnowledgePage';
+import { ConfigPage } from './pages/ConfigPage';
 import { NetworkBackground } from './components/network/NetworkBackground';
 import { ToastFeed } from './components/ToastFeed';
-import { MessageSquare, Kanban, Cpu, BrainCircuit, X, Terminal } from 'lucide-react';
+import { MessageSquare, Kanban, Cpu, BrainCircuit, Settings, X, Terminal } from 'lucide-react';
 
-type TabId = 'chat' | 'tasks' | 'automation' | 'knowledge';
+type TabId = 'chat' | 'tasks' | 'automation' | 'knowledge' | 'config';
 
 export default function App() {
   useParallax();
+  useWebSocket();
 
   const [activeTab, setActiveTab] = useState<TabId | null>(null);
   const [bootStage, setBootStage] = useState(0);
@@ -124,6 +127,12 @@ export default function App() {
               active={activeTab === 'knowledge'}
               onClick={() => toggleTab('knowledge')}
             />
+            <NavButton
+              icon={<Settings size={16} />}
+              label="Config"
+              active={activeTab === 'config'}
+              onClick={() => toggleTab('config')}
+            />
 
             {/* Nav toggle */}
             <button
@@ -170,6 +179,7 @@ export default function App() {
               {activeTab === 'tasks' && <TasksPage />}
               {activeTab === 'automation' && <AutomationPage />}
               {activeTab === 'knowledge' && <KnowledgePage />}
+              {activeTab === 'config' && <ConfigPage />}
             </div>
           </div>
         )}

@@ -64,9 +64,9 @@ export const NetworkBackground: React.FC<NetworkBackgroundProps> = ({
 
     // --- Instantiate Neural Network Layers ---
     const geometry = new NetworkGeometry();
-    const nodePoints = new NodePoints(systemGroup, geometry);
-    const edgeLines = new EdgeLines(systemGroup, geometry);
-    const signals = new SignalParticles(systemGroup, geometry);
+    const nodePoints = new NodePoints(systemGroup as any, geometry);
+    const edgeLines = new EdgeLines(systemGroup as any, geometry);
+    const signals = new SignalParticles(systemGroup as any, geometry);
 
     // --- Resize handler ---
     const handleResize = () => {
@@ -87,7 +87,6 @@ export const NetworkBackground: React.FC<NetworkBackgroundProps> = ({
     let lastTime = 0;
 
     const render = () => {
-      const state = stateRef.current;
       const amp = amplitudeRef.current;
       const panelOpen = panelOpenRef.current;
 
@@ -104,7 +103,7 @@ export const NetworkBackground: React.FC<NetworkBackgroundProps> = ({
       const time = clock.getElapsedTime();
 
       // Update the FSM transition engine
-      const transitionState = orbTransitionEngine.update();
+      orbTransitionEngine.update();
       const visualState = orbTransitionEngine.currentVisualState;
       const intensity = orbTransitionEngine.visualIntensity;
       const collapse = orbTransitionEngine.collapseActive;

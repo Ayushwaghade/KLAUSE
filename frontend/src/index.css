@@ -42,11 +42,24 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-body {
+html, body {
   margin: 0;
-  overflow: hidden;
-  background: radial-gradient(circle at 50% 50%, #0A1420 0%, #020508 100%);
+  padding: 0;
+  width: 100vw;
   height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, #0A1420 0%, #020508 100%);
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+  position: relative;
 }
 
 * { box-sizing: inherit; }
@@ -1031,4 +1044,119 @@ body {
   border-color: #f44336;
   box-shadow: 0 0 12px rgba(244, 67, 54, 0.4);
 }
+
+/* ━━━ HUD Confirmation Popup (Left-Side Floating Card) ━━━ */
+.hud-confirmation-card {
+  background: rgba(13, 17, 23, 0.95);
+  border: 1px solid rgba(255, 179, 0, 0.6);
+  border-left: 3px solid #ffb300;
+  box-shadow: 0 0 24px rgba(255, 179, 0, 0.25), 0 8px 32px rgba(0, 0, 0, 0.7);
+  border-radius: 10px;
+  padding: 12px 14px;
+  width: 320px;
+  max-width: 90vw;
+  backdrop-filter: blur(16px);
+  pointer-events: auto;
+  animation: slideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hud-confirmation-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hud-confirmation-card__badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffb300;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.hud-confirmation-card__content {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 179, 0, 0.2);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.hud-confirmation-card__prompt {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: #fff;
+  line-height: 1.4;
+  word-break: break-word;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.hud-confirmation-card__terminal-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.hud-confirmation-card__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.hud-confirmation-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.hud-confirmation-btn--approve {
+  background: #2e7d32;
+  color: #fff;
+  border-color: #388e3c;
+}
+
+.hud-confirmation-btn--approve:hover {
+  background: #388e3c;
+  box-shadow: 0 0 14px rgba(76, 175, 80, 0.4);
+  transform: translateY(-1px);
+}
+
+.hud-confirmation-btn--deny {
+  background: #c62828;
+  color: #fff;
+  border-color: #d32f2f;
+}
+
+.hud-confirmation-btn--deny:hover {
+  background: #d32f2f;
+  box-shadow: 0 0 14px rgba(244, 67, 54, 0.4);
+  transform: translateY(-1px);
+}
+
+.hud-confirmation-card__hint {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+  margin-top: 2px;
+}
+
 

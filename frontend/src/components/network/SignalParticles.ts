@@ -90,7 +90,7 @@ export class SignalParticles {
   }
 
   public update(
-    time: number,
+    _time: number,
     orbState: OrbState,
     amplitude: number,
     transitionIntensity: number,

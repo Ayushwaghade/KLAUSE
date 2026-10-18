@@ -3,6 +3,13 @@ import type { Project, Task, Rule, ScheduleJob, ChatMessage } from '../types/api
 
 const API_BASE = 'http://127.0.0.1:8000';
 
+export interface PendingConfirmation {
+  id: string;
+  requestId: string;
+  prompt: string;
+  sessionId: string;
+}
+
 interface StoreState {
   token: string | null;
   projects: Project[];
@@ -11,12 +18,15 @@ interface StoreState {
   rules: Rule[];
   schedules: ScheduleJob[];
   messages: ChatMessage[];
+  pendingConfirmation: PendingConfirmation | null;
   toasts: { id: string; message: string; type: 'info' | 'success' | 'warning' }[];
   connectionStatus: 'connected' | 'disconnected' | 'connecting';
   audioConnectionStatus: 'connected' | 'disconnected' | 'connecting';
   orbState: 'idle' | 'listening' | 'processing' | 'responding' | 'error';
   voiceInputActive: boolean;
   amplitude: number;
+  config: Record<string, any> | null;
+  rawYaml: string;
   
   // Actions
   setToken: (token: string) => void;
@@ -25,6 +35,8 @@ interface StoreState {
   fetchTasks: () => Promise<void>;
   fetchRules: () => Promise<void>;
   fetchSchedule: () => Promise<void>;
+  fetchConfig: () => Promise<void>;
+  saveConfig: (payload: { config?: Record<string, any>; raw_yaml?: string }) => Promise<boolean>;
   openProject: (path: string) => Promise<void>;
   updateTaskStatus: (taskId: string, newStatus: Task['status']) => Promise<void>;
   addRule: (rule: Omit<Rule, 'enabled'>) => Promise<void>;
@@ -37,6 +49,7 @@ interface StoreState {
   updateMessage: (id: string, updates: Partial<ChatMessage>) => void;
   addToast: (message: string, type?: 'info' | 'success' | 'warning') => void;
   removeToast: (id: string) => void;
+  setPendingConfirmation: (conf: PendingConfirmation | null) => void;
   setConnectionStatus: (status: 'connected' | 'disconnected' | 'connecting') => void;
   setAudioConnectionStatus: (status: 'connected' | 'disconnected' | 'connecting') => void;
   setOrbState: (state: StoreState['orbState']) => void;
@@ -61,14 +74,18 @@ export const useStore = create<StoreState>((set, get) => {
     rules: [],
     schedules: [],
     messages: [],
+    pendingConfirmation: null,
     toasts: [],
     connectionStatus: 'disconnected',
     audioConnectionStatus: 'disconnected',
     orbState: 'idle',
     voiceInputActive: false,
     amplitude: 0,
+    config: null,
+    rawYaml: '',
 
     setToken: (token) => set({ token }),
+    setPendingConfirmation: (pendingConfirmation) => set({ pendingConfirmation }),
 
     initializeAuth: async () => {
       try {
@@ -130,6 +147,42 @@ export const useStore = create<StoreState>((set, get) => {
         }
       } catch (err) {
         console.error("Fetch Schedule Error:", err);
+      }
+    },
+
+    fetchConfig: async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/config`, { headers: getHeaders() });
+        if (res.ok) {
+          const data = await res.json();
+          set({ config: data.config, rawYaml: data.raw_yaml || '' });
+        }
+      } catch (err) {
+        console.error("Fetch Config Error:", err);
+      }
+    },
+
+    saveConfig: async (payload) => {
+      try {
+        const res = await fetch(`${API_BASE}/api/config`, {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          const data = await res.json();
+          set({ config: data.config, rawYaml: data.raw_yaml || '' });
+          get().addToast('Configuration applied and saved to config.yaml', 'success');
+          return true;
+        } else {
+          const err = await res.json();
+          get().addToast(`Failed to save config: ${err.detail || 'Unknown error'}`, 'warning');
+          return false;
+        }
+      } catch (err: any) {
+        console.error("Save Config Error:", err);
+        get().addToast(`Network error: ${err.message}`, 'warning');
+        return false;
       }
     },
 

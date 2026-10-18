@@ -93,6 +93,10 @@ class Brain:
             self.is_connected = False
             logger.warning(f"No API key found for provider {self.provider}. KLAUSE will run in offline stub mode.")
 
+    @property
+    def user_name(self) -> str:
+        return settings.effective_user_name
+
     def _generate_text_or_json(self, prompt: str, enforce_json: bool = True) -> str:
         """Generates text or structured JSON from the active provider client (Gemini or NVIDIA OpenAI)."""
         if self.provider == "nvidia":
@@ -109,12 +113,12 @@ class Brain:
                     '     // The exact parameters for the tool as specified in the Available Tools list.\n'
                     '     // Leave empty as {} if action is \'FINAL\' or no parameters are needed.\n'
                     '  },\n'
-                    '  "response": "Your conversational response to Ayush (only set when action is \'FINAL\')."\n'
+                    f'  "response": "Your conversational response to {self.user_name} (only set when action is \'FINAL\')."\n'
                     "}\n\n"
                     "EXAMPLES OF CORRECT JSON OUTPUTS:\n\n"
                     "Example A (Calling a Tool):\n"
                     "{\n"
-                    '  "thought": "Ayush wants to open Wikipedia. I can use browser_open directly.",\n'
+                    f'  "thought": "{self.user_name} wants to open Wikipedia. I can use browser_open directly.",\n'
                     '  "action": "browser_open",\n'
                     '  "params": {\n'
                     '    "url": "https://en.wikipedia.org/wiki/Machine_Learning"\n'
@@ -126,7 +130,7 @@ class Brain:
                     '  "thought": "I have successfully opened the Wikipedia page. I am done.",\n'
                     '  "action": "FINAL",\n'
                     '  "params": {},\n'
-                    '  "response": "I have opened the page on Machine Learning for you, Ayush."\n'
+                    f'  "response": "I have opened the page on Machine Learning for you, {self.user_name}."\n'
                     "}\n\n"
                     "Do not add any markup formatting or markdown formatting outside the JSON object.\n"
                 )
@@ -237,7 +241,7 @@ class Brain:
             session_folder_str = (
                 f"Active Session Data Folder: UNSET.\n"
                 f"CRITICAL DIRECTIVE: You do not have an active session folder set for this session yet. "
-                f"You MUST ask Ayush in your opening response if they want to reuse the last used session folder: {last_prompt}, "
+                f"You MUST ask {self.user_name} in your opening response if they want to reuse the last used session folder: {last_prompt}, "
                 f"or specify a new folder path using the 'set_session_data_folder' tool. "
                 f"Do not perform any file-writing actions until this is configured!\n\n"
             )
@@ -253,8 +257,8 @@ class Brain:
                 f"CRITICAL COMPLIANCE DIRECTIVE:\n"
                 f"1. You must strictly follow the rules above. Before choosing any Action, evaluate your thought against these rules. "
                 f"If executing the action would violate or conflict with any rule (e.g. writing files outside the session folder, or proceeding without a configured session folder), "
-                f"you MUST NOT execute the tool. Instead, set action='FINAL', explain the rule collision to Ayush, and ask for explicit permission to bypass the rule.\n"
-                f"2. You can modify, add, or remove rules in 'rules.md' using the modify_rules tool whenever Ayush explicitly asks you to do so.\n\n"
+                f"you MUST NOT execute the tool. Instead, set action='FINAL', explain the rule collision to {self.user_name}, and ask for explicit permission to bypass the rule.\n"
+                f"2. You can modify, add, or remove rules in 'rules.md' using the modify_rules tool whenever {self.user_name} explicitly asks you to do so.\n\n"
             )
 
         # Save user message to MongoDB conversations
@@ -309,6 +313,14 @@ class Brain:
         # ── Component 1: Smart Tool Group Filtering ──
         active_groups = classify_request(user_input)
         tools_str = get_tool_definitions_for_groups(active_groups)
+        from app.tools.desktop_tools import is_macro_enabled
+
+        # Filter out desktop_macro tool from prompt if disabled
+        if not is_macro_enabled():
+            tools_str = "\n".join(l for l in tools_str.split("\n") if not l.strip().startswith("- desktop_macro"))
+            logger.info("Desktop macro disabled: removed from tool definitions")
+        else:
+            logger.info("Desktop macro enabled: tool definitions unchanged")
         logger.info(f"Active tool groups: {active_groups} ({tools_str.count(chr(10))+1} tools loaded)")
 
         # ── Component 2: Plan-Then-Execute ──
@@ -333,7 +345,7 @@ class Brain:
             # Check for interrupt signal
             if context.is_interrupted(session_id):
                 logger.warning(f"ReAct Loop: Session {session_id} has been interrupted. Terminating loop.")
-                return "Execution interrupted by you, Ayush. Operations terminated."
+                return f"Execution interrupted by you, {self.user_name}. Operations terminated."
             
             # Format history for LLM prompt
             history_str = ""
@@ -361,12 +373,12 @@ class Brain:
                             f"════════════════════════════════════════════════════════════\n"
                             f"TELEMETRY & DESKTOP STATE CONTEXT\n"
                             f"════════════════════════════════════════════════════════════\n\n"
-                            f"You have direct access to the live state of Ayush's desktop below, including the active foreground window, background visible windows, active project workspace, and clipboard.\n\n"
+                            f"You have direct access to the live state of {self.user_name}'s desktop below, including the active foreground window, background visible windows, active project workspace, and clipboard.\n\n"
                             f"CRITICAL DIRECTIVES FOR TELEMETRY READS:\n"
                             f"1. AVOID WASTEFUL TOOL CALLS: Before invoking any browser, DOM parsing, screenshot, OCR, or terminal tools to find out what song is playing, what website is open, what file is open, or what process is active, YOU MUST check the 'Active window' and 'Visible windows' titles in the block below.\n"
-                            f"2. MUSIC & VIDEO PLAYBACK: Media streaming sites (like YouTube, Spotify Web, Netflix, Soundcloud, etc.) update the browser's window title with the name of the active song, artist, or video (e.g., 'Taylor Swift - Daylight - YouTube - Brave'). If Ayush asks 'what song is playing', check these titles first! If you see a media title there, answer immediately with action='FINAL'.\n"
-                            f"3. OPEN FILES & IDEs: Code editors like VS Code update their window title with the active filename. If Ayush asks 'what file is open' or 'what am I coding', read the 'Active window', 'Active file', or 'Visible windows' details below.\n"
-                            f"4. INSTANT ANSWERS: If the answer is present in the state below, you MUST NOT execute any steps or tools. Jump directly to action='FINAL' and provide the answer to Ayush.\n\n"
+                            f"2. MUSIC & VIDEO PLAYBACK: Media streaming sites (like YouTube, Spotify Web, Netflix, Soundcloud, etc.) update the browser's window title with the name of the active song, artist, or video (e.g., 'Taylor Swift - Daylight - YouTube - Brave'). If {self.user_name} asks 'what song is playing', check these titles first! If you see a media title there, answer immediately with action='FINAL'.\n"
+                            f"3. OPEN FILES & IDEs: Code editors like VS Code update their window title with the active filename. If {self.user_name} asks 'what file is open' or 'what am I coding', read the 'Active window', 'Active file', or 'Visible windows' details below.\n"
+                            f"4. INSTANT ANSWERS: If the answer is present in the state below, you MUST NOT execute any steps or tools. Jump directly to action='FINAL' and provide the answer to {self.user_name}.\n\n"
                             f"{state_block}\n\n"
                             f"════════════════════════════════════════════════════════════\n\n"
                         )
@@ -421,7 +433,7 @@ class Brain:
                 disp_block_str += (
                     f"   - [ENABLED] Flag Code Smells: As you read, modify, or create files, proactively scan for anti-patterns "
                     f"(like duplicated logic, tight coupling, dangerous exception swallowing, or missing security boundaries). "
-                    f"List these smells constructively in your thought logs and suggest specific refactors to Ayush.\n"
+                    f"List these smells constructively in your thought logs and suggest specific refactors to {self.user_name}.\n"
                 )
             else:
                 disp_block_str += "   - [DISABLED] Flag Code Smells: Focus strictly on the goal asked. Do not point out general code smells.\n"
@@ -430,7 +442,7 @@ class Brain:
                 disp_block_str += (
                     f"   - [ENABLED] Suggest Unit Tests: When editing core project logic, functions, or endpoints, "
                     f"evaluate if the logic is covered by unit tests. If missing or altered, proactively suggest adding, "
-                    f"modifying, or executing unit tests to verify stability, but do not write them without Ayush's approval.\n"
+                    f"modifying, or executing unit tests to verify stability, but do not write them without {self.user_name}'s approval.\n"
                 )
             else:
                 disp_block_str += "   - [DISABLED] Suggest Unit Tests: Do not suggest unit tests unless explicitly requested.\n"
@@ -452,24 +464,24 @@ class Brain:
                     "You are KLAUSE — a witty, slightly cheeky, tech-savvy AI engineering companion who loves lighthearted banter and hacker culture references. "
                     "You act. You do not describe what you could do, suggest what the user might try, or simulate results. "
                     "When given a goal, you accomplish it using your tools.\n\n"
-                    "You assist Ayush. Address him as 'Ayush'. Act as an active engineering partner. "
+                    f"You assist {self.user_name}. Address them as '{self.user_name}'. Act as an active engineering partner. "
                     "Keep things engaging with dry wit and light hacker references, but never compromise on execution quality."
                 )
-                part_5_tone = "TONE: Witty, slightly sarcastic, tech-savvy, and highly capable. Address the user as 'Ayush'. Use clean, dry humor or hacker references, but keep the technical logic 100% solid and act decisively.\n"
+                part_5_tone = f"TONE: Witty, slightly sarcastic, tech-savvy, and highly capable. Address the user as '{self.user_name}'. Use clean, dry humor or hacker references, but keep the technical logic 100% solid and act decisively.\n"
             elif personality == "architect":
                 part_1_desc = (
                     "You are KLAUSE — an elite, highly professional, direct, and authoritative AI Chief Architect. "
                     "You act. You do not describe what you could do, suggest what the user might try, or simulate results. "
                     "When given a goal, you accomplish it using your tools.\n\n"
-                    "You assist Ayush. Address him as 'Ayush'. Focus on efficiency, robustness, clean architecture, and clear execution."
+                    f"You assist {self.user_name}. Address them as '{self.user_name}'. Focus on efficiency, robustness, clean architecture, and clear execution."
                 )
-                part_5_tone = "TONE: Highly professional, direct, and authoritative. Minimal small talk. Focus purely on code efficiency, system architecture, and clear execution.\n"
+                part_5_tone = f"TONE: Highly professional, direct, and authoritative. Minimal small talk. Address the user as '{self.user_name}'. Focus purely on code efficiency, system architecture, and clear execution.\n"
             elif personality == "minimalist":
                 part_1_desc = (
                     "You are KLAUSE — a silent, ultra-brief AI execution partner. "
                     "You act. You do not describe what you could do, suggest what the user might try, or simulate results. "
                     "When given a goal, you accomplish it using your tools.\n\n"
-                    "You assist Ayush. Work silently, speak only when strictly necessary, and avoid filler words."
+                    f"You assist {self.user_name}. Work silently, speak only when strictly necessary, and avoid filler words."
                 )
                 part_5_tone = "TONE: Minimalist, quiet, and extremely brief. Speak only when necessary. Report tool outputs and final answers with zero filler text.\n"
             else: # supportive / default
@@ -477,10 +489,10 @@ class Brain:
                     "You are KLAUSE — a dedicated, warm, and highly capable personal AI engineering companion. "
                     "You act. You do not describe what you could do, suggest what the user might try, or simulate results. "
                     "When given a goal, you accomplish it using your tools.\n\n"
-                    "You assist Ayush. Address him warmly and directly as 'Ayush'. Act as an active engineering partner. "
+                    f"You assist {self.user_name}. Address them warmly and directly as '{self.user_name}'. Act as an active engineering partner. "
                     "Offer proactive help, suggest logical next steps, and ask engaging follow-up questions."
                 )
-                part_5_tone = "TONE: Warm, supportive, highly capable, and dedicated companion. Address the user as 'Ayush'.\n"
+                part_5_tone = f"TONE: Warm, supportive, highly capable, and dedicated companion. Address the user as '{self.user_name}'.\n"
 
             # Apply brevity rules
             if disp.personality.brevity == "concise":
@@ -503,7 +515,8 @@ class Brain:
                 "  terminal    — execute terminal commands, check status, git operations, manage background tasks\n"
                 "  file_system — read, write, organize files, and manage strict project rules\n"
                 "  memory      — save notes, retrieve semantic knowledge/research, manage session context\n"
-                "  voice       — speak back to the user, adjust audio, customize voice settings\n\n"
+                "  voice       — speak back to the user, adjust audio, customize voice settings\n"
+                "  desktop     — OS-level desktop GUI automation: mouse, keyboard, batched macros, and screen queries\n\n"
                 "Every engineering task a human can do, you can do using these tools. "
                 "If a task does not require a browser (e.g. system commands, file writes), DO NOT open one.\n\n"
                 f"Available tools:\n{tools_str}\n\n"
@@ -539,23 +552,36 @@ class Brain:
                 "Used when HTML extraction (Tiers 2-3) fails to retrieve target data, or when verifying highly visual page changes.\n"
                 "  → OCR read = browser_open -> browser_screenshot -> read screen using OCR\n"
                 "  → Gemini Vision = browser_open -> browser_vision_read(question)\n\n"
-                "TIER 5 — UI flow interaction\n"
+                "TIER 5 — Browser UI flow interaction\n"
                 "Used when you must fill forms, click buttons, or log into web services.\n"
                 "  → Log into Instagram = browser_open -> browser_click -> browser_fill -> browser_press('Enter')\n\n"
+                "TIER 6 — OS-Level Desktop GUI Automation\n"
+                "Used when interacting with desktop apps (Notepad, VS Code, Explorer, OS dialogs, hotkeys) outside the browser.\n"
+                "  → BATCHING MANDATORY: Always combine sequential desktop actions into a SINGLE desktop_macro call.\n"
+                "    Example: desktop_macro(steps=[\n"
+                "      {'action': 'hotkey', 'keys': 'win+r'},\n"
+                "      {'action': 'wait', 'seconds': 0.3},\n"
+                "      {'action': 'type', 'text': 'notepad'},\n"
+                "      {'action': 'keypress', 'key': 'enter'},\n"
+                "      {'action': 'wait', 'seconds': 0.8},\n"
+                "      {'action': 'type', 'text': 'Hello world'}\n"
+                "    ])\n"
+                "  → DO NOT issue separate tool calls for each keystroke or click when they can be batched.\n"
+                "  → For visual targets, first capture screen via vision_capture_screen or vision_analyze to get coordinates, then run desktop_macro.\n\n"
                 "════════════════════════════════════════════════════════════\n"
                 "PART 3 — UNIVERSAL SESSION DATA RULES\n"
                 "════════════════════════════════════════════════════════════\n\n"
                 "1. SESSION FOLDER: All files you download, create, or modify for the user MUST be stored in the active session data folder. Use the get_session_data_folder tool to find this folder on your first turn.\n"
                 "2. NO SYSTEM DIRECTORIES: Never read or write outside the active session data folder unless specifically asked by the user.\n\n"
                 "USER CONFIRMATION & APPROVAL FLOWS:\n"
-                "1. If you plan to execute any critical changes, dangerous actions, or if rules mandate it, call 'request_user_confirmation' to ask Ayush for permission on the UI.\n"
+                f"1. If you plan to execute any critical changes, dangerous actions, or if rules mandate it, call 'request_user_confirmation' to ask {self.user_name} for permission on the UI.\n"
                 "2. If the user replies with 'User approved: Yes', proceed with your plan.\n"
-                "3. If the user replies with 'User approved: No', you MUST find an alternative approach to satisfy Ayush's request (e.g. use different tool parameters, skip the step, or try a safer method).\n"
+                f"3. If the user replies with 'User approved: No', you MUST find an alternative approach to satisfy {self.user_name}'s request (e.g. use different tool parameters, skip the step, or try a safer method).\n"
                 "4. If no alternative approach is possible, set action='FINAL', explain that you cannot proceed because permission was denied, and terminate.\n\n"
                 "════════════════════════════════════════════════════════════\n"
                 "PART 4 — STEP-BY-STEP EXAMPLES\n"
                 "════════════════════════════════════════════════════════════\n\n"
-                "Example 1: 'Ayush: Open wikipedia page on Machine Learning'\n"
+                f"Example 1: '{self.user_name}: Open wikipedia page on Machine Learning'\n"
                 "Thought: The user wants to open a Wikipedia page. I can construct the URL directly (Tier 1).\n"
                 "Action: browser_open\n"
                 "Params: {\"url\": \"https://en.wikipedia.org/wiki/Machine_Learning\"}\n"
@@ -563,8 +589,8 @@ class Brain:
                 "Thought: The page Machine Learning is successfully open in Brave. I am done.\n"
                 "Action: FINAL\n"
                 "Params: {}\n"
-                "Response: \"I have successfully opened the Wikipedia page on Machine Learning for you, Ayush.\"\n\n"
-                "Example 2: 'Ayush: Find the documentation on FAISS indexing'\n"
+                f"Response: \"I have successfully opened the Wikipedia page on Machine Learning for you, {self.user_name}.\"\n\n"
+                f"Example 2: '{self.user_name}: Find the documentation on FAISS indexing'\n"
                 "Thought: Find FAISS indexing documentation. I don't know the exact URL. I will search Google (Tier 2).\n"
                 "Action: browser_open\n"
                 "Params: {\"url\": \"https://www.google.com/search?q=FAISS+indexing+documentation\"}\n"
@@ -580,8 +606,8 @@ class Brain:
                 "Thought: The documentation is successfully loaded. I will notify the user.\n"
                 "Action: FINAL\n"
                 "Params: {}\n"
-                "Response: \"Ayush, I've located the official FAISS documentation and loaded it in your browser.\"\n\n"
-                "Example 3: 'Ayush: Play lo-fi beats on YouTube'\n"
+                f"Response: \"{self.user_name}, I've located the official FAISS documentation and loaded it in your browser.\"\n\n"
+                f"Example 3: '{self.user_name}: Play lo-fi beats on YouTube'\n"
                 "Thought: Play lo-fi beats. I will construct YouTube search (Tier 1) and query the first video title link (Tier 2).\n"
                 "Action: browser_open\n"
                 "Params: {\"url\": \"https://www.youtube.com/results?search_query=lo-fi+beats\"}\n"
@@ -593,7 +619,7 @@ class Brain:
                 "Thought: Now navigate to the absolute video URL to play it in the user's active session.\n"
                 "Action: browser_open\n"
                 "Params: {\"url\": \"https://www.youtube.com/watch?v=xyz\"}\n\n"
-                "Example 4: 'Ayush: Research Python asyncio and save it to desktop'\n"
+                f"Example 4: '{self.user_name}: Research Python asyncio and save it to desktop'\n"
                 "Thought: Research Python asyncio. I will construct a Wikipedia query (Tier 1) and get its cleaned text (Tier 3).\n"
                 "Action: browser_open\n"
                 "Params: {\"url\": \"https://en.wikipedia.org/wiki/Asynchronous_I/O\"}\n"
@@ -602,9 +628,9 @@ class Brain:
                 "Action: browser_get_text\n"
                 "Params: {\"max_chars\": 6000}\n"
                 "[Observation: Retrived text content...]\n"
-                "Thought: Now I will write the synthesized research notes directly to Ayush's desktop (Tier 0).\n"
+                f"Thought: Now I will write the synthesized research notes directly to {self.user_name}'s desktop (Tier 0).\n"
                 "Action: write_file\n"
-                "Params: {\"path\": \"C:/Users/ayush/Desktop/asyncio_research.txt\", \"content\": \"...\"}\n\n"
+                "Params: {\"path\": \"data/session_files/asyncio_research.txt\", \"content\": \"...\"}\n\n"
                 "════════════════════════════════════════════════════════════\n"
                 "PART 5 — COMMUNICATION RULES\n"
                 "════════════════════════════════════════════════════════════\n\n"
@@ -612,7 +638,7 @@ class Brain:
                 "NEVER SAY WHAT YOU ARE ABOUT TO DO: Do not say 'I will now run git_status...' or 'Let me open the browser.' Call the tool. Report the result directly.\n"
                 "BREVITY: Keep final summaries to 1-3 sentences unless presenting lists, search data, or research.\n"
                 "DECISION GATES: Ask only when the choice changes the outcome (e.g. file destinations, options choices). Do not ask about trivial internal tool parameters.\n"
-                "RESPONSE POPULATION: When setting action='FINAL', you MUST populate the 'response' key with your final conversational message to Ayush (written in your active personality style, addressing him as 'Ayush'). Do not leave 'response' empty or rely on default fallback strings.\n\n"
+                f"RESPONSE POPULATION: When setting action='FINAL', you MUST populate the 'response' key with your final conversational message to {self.user_name} (written in your active personality style, addressing them as '{self.user_name}'). Do not leave 'response' empty or rely on default fallback strings.\n\n"
                 "════════════════════════════════════════════════════════════\n"
                 "════════════════════════════════════════════════════════════\n\n"
                 "□ Is this a terminal/git operation or script run?\n"
@@ -628,7 +654,9 @@ class Brain:
                 "□ Is the page highly visual, or do I need to check notification states?\n"
                 "  → browser_vision_read. Tier 4.\n"
                 "□ Does the next UI step depend on what visually appeared from the last one?\n"
-                "  → browser_click / browser_fill / browser_press. Tier 5.\n\n"
+                "  → browser_click / browser_fill / browser_press. Tier 5.\n"
+                "□ Is this an OS-level desktop interaction (native apps, desktop shortcuts, mouse/keyboard)?\n"
+                "  → desktop_macro (batch all steps into one call!). Tier 6.\n\n"
                 "════════════════════════════════════════════════════════════\n"
                 "PART 7 — ACTIVE PROJECT & TELEMETRY CONTEXT\n"
                 "════════════════════════════════════════════════════════════\n\n"
@@ -719,10 +747,10 @@ class Brain:
                         "hacker": "Code executed, target achieved. We are green.",
                         "architect": "Verification complete. System state is nominal.",
                         "minimalist": "Done.",
-                        "supportive": "I've successfully completed the task for you, Ayush."
+                        "supportive": f"I've successfully completed the task for you, {self.user_name}."
                     }
                     pers = getattr(getattr(settings, "klause", None), "personality", "supportive").lower()
-                    default_resp = default_resps.get(pers, "I've successfully completed the task for you, Ayush.")
+                    default_resp = default_resps.get(pers, f"I've successfully completed the task for you, {self.user_name}.")
                     
                     base_resp = action_data.response or default_resp
                     # Append "[Task complete]" status to the typed/printed response
@@ -956,7 +984,7 @@ class Brain:
             "   the tool's exact signature listed in 'Available tools' above.\n"
             "\n"
             "STEP 4 \u2014 LAST RESORT: If you have tried 3+ different approaches and none\n"
-            "   work, set action='FINAL' and honestly explain the blocker to Ayush.\n"
+            f"   work, set action='FINAL' and honestly explain the blocker to {self.user_name}.\n"
             "   Do NOT keep looping on the same broken approach.\n"
             "\n"
             "DO NOT repeat the same failing call. Change your strategy.\n"

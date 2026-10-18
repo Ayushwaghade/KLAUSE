@@ -79,13 +79,17 @@ const ToastItem: React.FC<ToastItemProps> = ({ id, message, type }) => {
   );
 };
 
+import { ConfirmationPopup } from './ConfirmationPopup';
+
 export const ToastFeed: React.FC = () => {
   const toasts = useStore(state => state.toasts);
+  const pending = useStore(state => state.pendingConfirmation);
 
-  if (toasts.length === 0) return null;
+  if (toasts.length === 0 && !pending) return null;
 
   return (
     <div style={containerStyle}>
+      {pending && <ConfirmationPopup pending={pending} />}
       {toasts.map(toast => (
         <ToastItem
           key={toast.id}

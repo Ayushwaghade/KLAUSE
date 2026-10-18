@@ -48,7 +48,7 @@ const ToolCard: React.FC<{ msg: ChatMessage; observation?: ChatMessage }> = ({ m
 /* ─── Main Chat Page ─── */
 export const ChatPage: React.FC = () => {
   const [inputText, setInputText] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const chatFeedRef = useRef<HTMLDivElement | null>(null);
 
   const messages = useStore(state => state.messages);
   const voiceActive = useStore(state => state.voiceInputActive);
@@ -116,7 +116,12 @@ export const ChatPage: React.FC = () => {
   };
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatFeedRef.current) {
+      chatFeedRef.current.scrollTo({
+        top: chatFeedRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
   }, [messages]);
 
   /* ─── Group messages into reasoning chains ─── */
@@ -298,7 +303,7 @@ export const ChatPage: React.FC = () => {
       </div>
 
       {/* Chat feed */}
-      <div className="chat-feed fade-scroll-container">
+      <div className="chat-feed fade-scroll-container" ref={chatFeedRef}>
         {messages.length === 0 ? (
           <div className="chat-welcome">
             <h2 className="chat-welcome__title">Hello, Ayush.</h2>
@@ -307,7 +312,6 @@ export const ChatPage: React.FC = () => {
         ) : (
           renderMessages()
         )}
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Input area */}

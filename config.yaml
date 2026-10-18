@@ -1,59 +1,45 @@
 klause:
   name: KLAUSE
+  user_name: Ayush
   version: 0.1.0
-  wake_word: "klause"
-  personality: "hacker"
-
+  wake_word: klause
+  personality: hacker
 ai:
-  # gemini_model: gemini-3.1-flash-lite-preview
-  # embedding_model: models/embedding-001
-  # max_tokens: 8192
-  # max_steps: 10
-  provider: "nvidia"
-  nvidia_model: "nvidia/nemotron-3-ultra-550b-a55b"
-  nvidia_base_url: "https://integrate.api.nvidia.com/v1"
-  embedding_model: "models/embedding-001"
+  provider: nvidia
+  nvidia_model: nvidia/nemotron-3-ultra-550b-a55b
+  nvidia_base_url: https://integrate.api.nvidia.com/v1
+  embedding_model: models/embedding-001
   max_tokens: 8192
   max_steps: 10
-
-  # Dynamic Model Routing
   routing_enabled: true
-  fast_provider: "gemini"
-  fast_model: "gemini-3.1-flash-lite-preview"
-  complex_provider: "nvidia"
-  complex_model: "nvidia/nemotron-3-ultra-550b-a55b"
-
+  fast_provider: gemini
+  fast_model: gemini-3.1-flash-lite-preview
+  complex_provider: nvidia
+  complex_model: nvidia/nemotron-3-ultra-550b-a55b
 memory:
   mongo_uri: mongodb://localhost:27017/
   mongo_db: klause
   chroma_path: ./data/chroma
   max_conversation_history: 100
-
 voice:
   enabled: true
-  trigger_mode: "push_to_talk"
-  hotkey: "ctrl+space"
-  stt_engine: "whisper"
-  tts_engine: "sapi"
+  trigger_mode: wake_word
+  hotkey: ctrl+space
+  stt_engine: whisper
+  tts_engine: sapi
   max_spoken_sentences: 3
   speaking_rate: 0
   live_typer:
-    hotkey: "ctrl+shift+v"
+    hotkey: ctrl+shift+v
     chunk_seconds: 2
     max_duration_seconds: 300
-
-# Google Custom Search API settings (optional, falls back to DuckDuckGo if blank)
-google_search_api_key: ""
-google_search_cx: ""
-
-# Serper API Key (optional, falls back to DuckDuckGo if blank)
-serper_api_key: ""
-
+google_search_api_key: ''
+google_search_cx: ''
+serper_api_key: ''
 paths:
   knowledge_base: ./knowledge_base
   projects: ./projects
   logs: ./logs
-
 allowed_applications:
   notepad: notepad.exe
   calc: calc.exe
@@ -61,20 +47,20 @@ allowed_applications:
   cmd: cmd.exe
   mspaint: mspaint.exe
   taskmgr: taskmgr.exe
-  chrome: "C:/Program Files/Google/Chrome/Application/chrome.exe"
-  brave: "C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe"
-
+  chrome: C:/Program Files/Google/Chrome/Application/chrome.exe
+  brave: C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe
 state_machine:
   enabled: true
   capture_clipboard: true
   max_visible_windows: 10
-
 automation:
   enabled: true
   polling_interval_seconds: 0.5
   debounce_interval_seconds: 0.3
   max_rules: 50
-
 browser:
   prefer: brave
-  profile_directory: "Default" # Specify your main profile directory (e.g. "Default", "Profile 1") to bypass the profile picker screen
+  profile_directory: Default
+
+desktop_macro:
+  enabled: false

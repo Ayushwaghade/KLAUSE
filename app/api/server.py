@@ -293,6 +293,46 @@ def sync_obsidian():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+class UpdateConfigRequest(BaseModel):
+    config: Optional[Dict[str, Any]] = None
+    raw_yaml: Optional[str] = None
+
+@app.get("/api/config", tags=["Configuration"], dependencies=[Depends(verify_token)])
+def get_config_endpoint():
+    """Returns the current config.yaml content both as structured dict and raw text."""
+    try:
+        from app.config.config import get_yaml_config
+        return get_yaml_config()
+    except Exception as e:
+        logger.error(f"Failed to fetch config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/config", tags=["Configuration"], dependencies=[Depends(verify_token)])
+@app.put("/api/config", tags=["Configuration"], dependencies=[Depends(verify_token)])
+def update_config_endpoint(req: UpdateConfigRequest):
+    """Updates config.yaml from either structured dict or raw YAML text, and applies changes in-memory."""
+    try:
+        from app.config.config import save_yaml_config
+        if req.raw_yaml is not None and req.raw_yaml.strip():
+            result = save_yaml_config(req.raw_yaml)
+        elif req.config is not None:
+            result = save_yaml_config(req.config)
+        else:
+            raise HTTPException(status_code=400, detail="Must provide either 'config' dictionary or 'raw_yaml' string.")
+        
+        return {
+            "status": "success",
+            "message": "Configuration saved and applied successfully.",
+            **result
+        }
+    except HTTPException:
+        raise
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        logger.error(f"Failed to save config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # --- WebSockets Streaming Channels ---
 
 def parse_yes_no(text: str) -> Optional[bool]:
@@ -352,7 +392,7 @@ async def websocket_chat(websocket: WebSocket, token: str = Query(None)):
                     await websocket.send_json({
                         "type": "thought",
                         "step": 99,
-                        "thought": "Ayush triggered an interrupt. Halting...",
+                        "thought": f"{settings.effective_user_name} triggered an interrupt. Halting...",
                         "action": "HALT",
                         "params": {}
                     })

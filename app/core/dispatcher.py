@@ -97,6 +97,39 @@ class Dispatcher:
                     prompt_text = f"Execute terminal command: '{params.get('command')}'"
                 elif tool_name == "run_terminal_command_async":
                     prompt_text = f"Execute background terminal command: '{params.get('command')}'"
+                elif tool_name == "desktop_macro":
+                    steps = params.get("steps", [])
+                    if isinstance(steps, str):
+                        try:
+                            import json
+                            steps = json.loads(steps)
+                        except Exception:
+                            pass
+                    if isinstance(steps, list):
+                        summary_items = []
+                        for s in steps[:5]:
+                            if isinstance(s, dict):
+                                act = s.get("action", "")
+                                if act == "hotkey":
+                                    summary_items.append(f"hotkey({s.get('keys')})")
+                                elif act == "type":
+                                    preview = str(s.get('text', ''))[:15]
+                                    summary_items.append(f"type('{preview}')")
+                                elif act == "click":
+                                    summary_items.append(f"click({s.get('x')}, {s.get('y')})")
+                                elif act == "keypress":
+                                    summary_items.append(f"press({s.get('key')})")
+                                elif act in ("wait", "sleep"):
+                                    summary_items.append(f"wait({s.get('seconds', 0.5)}s)")
+                                else:
+                                    summary_items.append(act)
+                            else:
+                                summary_items.append(str(s))
+                        if len(steps) > 5:
+                            summary_items.append(f"+{len(steps)-5} more")
+                        prompt_text = f"Execute desktop macro ({len(steps)} steps): " + " -> ".join(summary_items)
+                    else:
+                        prompt_text = f"Execute desktop macro: {str(steps)[:100]}"
                 else:
                     param_str = ", ".join(f"{k}={v}" for k, v in params.items())
                     prompt_text = f"Run destructive tool '{tool_name}' with parameters: ({param_str})"

@@ -2,6 +2,7 @@ import os
 import re
 from pathlib import Path
 from loguru import logger
+from app.config.config import settings
 
 class RulesManager:
     """
@@ -35,12 +36,13 @@ class RulesManager:
 
     def _create_default_rules(self):
         """Creates a default rules.md file."""
+        u_name = settings.effective_user_name
         default_content = (
             "# Last modified: 2026-06-29 17:00:00\n\n"
             "## [File] Rule 1: Session Data Folder\n"
             "- Store all session output files (downloads, generated text files, screenshots) within the active session folder.\n"
-            "- If no active session folder is set, stop and ask Ayush to specify one before writing any files.\n"
-            "- If you must write files outside the session folder, ask Ayush for permission first.\n\n"
+            f"- If no active session folder is set, stop and ask {u_name} to specify one before writing any files.\n"
+            f"- If you must write files outside the session folder, ask {u_name} for permission first.\n\n"
             "## [General] Rule 2: Notes & Context Scanning\n"
             "- Before starting any task that explicitly references a project by name, read the notes file for that project if it exists.\n"
             "- Do not scan notes for simple one-off tasks (calculations, web searches, file conversions).\n"

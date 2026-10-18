@@ -32,9 +32,9 @@
               "state": {
                 "file": "KLAUSE_Connections.canvas",
                 "viewState": {
-                  "x": 110,
-                  "y": 30.00000000000003,
-                  "zoom": -0.3582193672789992
+                  "x": 1311.768137429708,
+                  "y": 650.147248505659,
+                  "zoom": -2.6666666666666665
                 }
               },
               "icon": "lucide-layout-dashboard",
@@ -62,7 +62,9 @@
               "type": "file-explorer",
               "state": {
                 "sortOrder": "alphabetical",
-                "autoReveal": true
+                "autoReveal": true,
+                "showSearch": false,
+                "searchQuery": ""
               },
               "icon": "lucide-folder-closed",
               "title": "Files"
@@ -183,7 +185,7 @@
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of KLAUSE_Connections"
+              "title": "Outline"
             }
           }
         ],
@@ -206,8 +208,14 @@
   },
   "active": "8c94898c8f519839",
   "lastOpenFiles": [
-    "The_capital_of_France_is_Paris..md",
+    "KLAUSE_is_configured_to_use_MongoDB_for.md",
+    "Learning_When_HTML_parsing_and_direct_D.md",
+    "Python_is_a_dynamic_programming_language.md",
+    "Useful_IP_Location_lookup_services_for_A.md",
+    "#_PhishGuard_AI_Technical_Summary.md",
+    "Ayush_Waghade_lives_in_Khamgaon,_Maharas.md",
     "KLAUSE_Connections.canvas",
+    "The_capital_of_France_is_Paris..md",
     "Untitled.canvas",
     "Untitled.md",
     "Untitled 1.md",
