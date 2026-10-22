@@ -148,9 +148,9 @@ def main():
                 response = brain.think(user_input, session_id=session_id, step_callback=terminal_step_callback)
                 console.print(f"\n[bold cyan]KLAUSE:[/bold cyan] {response}\n")
                 
-                # Speak response back to user
+                # Speak response back to user via Narrator or SAPI
                 if voice_manager.enabled:
-                    voice_manager.speak(response)
+                    voice_manager.speak(response, event_type="done")
                     
             # Prevent high CPU usage by yielding time slice
             time.sleep(0.05)

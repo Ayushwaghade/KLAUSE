@@ -5,6 +5,7 @@ from loguru import logger
 from app.config.config import settings
 from app.voice.stt import record_audio_clip, transcribe_audio
 from app.voice.tts import TTSEngine, tts_engine
+from app.voice.live_session import live_voice_session
 
 # Global thread-safe queue for routing transcribed vocal inputs to main loop
 voice_input_queue = queue.Queue()
@@ -20,18 +21,29 @@ class VoiceManager:
     def __init__(self):
         self.tts = tts_engine
         self.enabled = settings.voice.enabled
+        self.mode = getattr(settings.voice, "mode", "live")
         self.trigger_mode = settings.voice.trigger_mode
         self.hotkey = settings.voice.hotkey
         self.temp_wav = os.path.join(settings.paths.logs, "voice_temp.wav")
         self._listening = False
+        self.live_session = live_voice_session
 
     def start(self):
         """
-        Starts the background voice listener/hotkey thread if enabled.
+        Starts the background voice listener or Gemini Live session if enabled.
         """
         if not self.enabled:
             logger.info("Voice Manager: Voice support is disabled in config.")
             return
+
+        if self.mode == "live":
+            logger.info("Voice Manager: Starting Gemini 3.8 Live API voice engine...")
+            try:
+                self.live_session.start()
+                return
+            except Exception as e:
+                logger.error(f"Voice Manager: Failed to start Live API voice engine ({e}). Falling back to legacy STT/TTS mode.")
+                self.mode = "legacy"
             
         if self.trigger_mode == "push_to_talk":
             if not HAS_KEYBOARD:
@@ -45,17 +57,39 @@ class VoiceManager:
             except Exception as e:
                 logger.error(f"Failed to register keyboard hotkey: {e}")
 
-    def speak(self, text: str):
+    def speak(self, text: str, event_type: str = "done"):
         """
-        Proxy helper to speak text.
+        Proxy helper to speak text out loud.
+        In Live mode, delegates to Live Voice narrator (with automatic SAPI fallback).
+        In legacy mode, uses SAPI directly.
         """
-        self.tts.speak(text)
+        if self.mode == "live" and self.live_session:
+            self.live_session.say(text, event_type=event_type)
+        else:
+            self.tts.speak(text)
 
     def stop_speaking(self):
         """
-        Proxy helper to stop ongoing speech.
+        Proxy helper to stop ongoing speech across both Live and legacy engines.
         """
+        if self.mode == "live" and self.live_session:
+            try:
+                self.live_session._purge_audio_playback()
+                self.live_session._purge_speech_queue_steps()
+            except Exception as e:
+                logger.debug(f"Live voice stop error: {e}")
         self.tts.stop()
+
+    def stop(self):
+        """
+        Terminates active voice sessions and unregisters hotkeys.
+        """
+        if self.mode == "live":
+            try:
+                self.live_session.stop()
+            except Exception as e:
+                logger.debug(f"Live session stop error: {e}")
+        self.stop_speaking()
 
     def _on_ptt_triggered(self):
         """

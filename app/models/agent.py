@@ -5,7 +5,8 @@ class AgentAction(BaseModel):
     thought: str = Field("", description="Your step-by-step reasoning on what to do next.")
     action: str = Field("FINAL", description="The name of the tool to invoke, or 'FINAL' when done.")
     params: Dict[str, Any] = Field(default_factory=dict, description="Key-value parameters to pass to the tool.")
-    response: Optional[str] = Field(None, description="The final answer to the user (only set when action='FINAL').")
+    response: Optional[str] = Field(None, description="The final answer to the user (only set when action='FINAL' or when final_on_success=True).")
+    final_on_success: bool = Field(False, description="Set to true ONLY if this single action fully completes the request on success.")
 
 
 class ToolObservation(BaseModel):

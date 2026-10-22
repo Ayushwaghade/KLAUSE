@@ -15,6 +15,14 @@ def setup_logging(cli_mode: bool = False):
             
     logger.configure(patcher=patcher)
     
+    # Ensure Windows console streams support UTF-8 without charmap errors
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            try:
+                stream.reconfigure(encoding="utf-8", errors="replace")
+            except Exception:
+                pass
+
     # If in interactive CLI mode, only log WARNING or higher to stderr
     # to avoid polluting the chat conversation.
     stdout_level = "WARNING" if cli_mode else settings.log_level
@@ -34,6 +42,7 @@ def setup_logging(cli_mode: bool = False):
         rotation="10 MB",
         retention="1 week",
         compression="zip",
+        encoding="utf-8",
         format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
     )
     

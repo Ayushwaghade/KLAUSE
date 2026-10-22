@@ -458,9 +458,24 @@ async def websocket_chat(websocket: WebSocket, token: str = Query(None)):
                     await loop.run_in_executor(None, run_canvas_update)
             except Exception as e:
                 logger.warning(f"WS Chat: Canvas update failed (non-critical): {e}")
+
+            # Sync UI chat turns into Live Voice Rotator so Gemini Live is aware of UI conversations
+            try:
+                from app.voice.live_session import live_voice_session
+                live_voice_session.rotator.record_turn("user", prompt)
+                live_voice_session.rotator.record_turn("assistant", final_response)
+            except Exception as e:
+                logger.debug(f"WS Chat: Failed to sync turn into Live Voice rotator: {e}")
             
-            # Speak the final response back to the user out loud
-            tts_engine.speak(final_response)
+            # Speak the final response back to the user out loud if voice is enabled
+            # live_voice_session.say handles Puck Live narration and automatically falls back to SAPI if offline
+            if settings.voice.enabled:
+                try:
+                    from app.voice.live_session import live_voice_session
+                    live_voice_session.say(final_response, event_type="done")
+                except Exception as e:
+                    logger.debug(f"WS Chat: Live voice output error: {e}")
+                    tts_engine.speak(final_response)
             
             # Send completion response back
             await websocket.send_json({

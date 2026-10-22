@@ -83,6 +83,12 @@ export function useWebSocket() {
           } else {
             addToast(`Step ${data.step} reported errors`, "warning");
           }
+        } else if (data.type === 'user_prompt' || data.type === 'prompt') {
+          addMessage({
+            sender: 'user',
+            type: 'prompt',
+            text: data.text || data.prompt || ''
+          });
         } else if (data.type === 'request_confirmation') {
           const msgId = Math.random().toString(36).substring(7);
           addMessage({
@@ -138,7 +144,7 @@ export function useWebSocket() {
             addMessage({
               sender: 'klause',
               type: 'final',
-              text: data.response,
+              text: data.response || data.text || '',
               streaming: false
             });
           }

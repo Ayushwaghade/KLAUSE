@@ -25,6 +25,16 @@ class OrbStateBroadcaster:
             except Exception:
                 dead.add(ws)
         self._clients -= dead
+
+    def set_state(self, state: str):
+        """Thread-safe synchronous helper to update current_state and broadcast if loop available."""
+        self._current_state = state
+        try:
+            loop = asyncio.get_running_loop()
+            if loop.is_running():
+                loop.create_task(self.emit(state))
+        except RuntimeError:
+            pass
     
     @property
     def current_state(self) -> str:

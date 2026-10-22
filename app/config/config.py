@@ -39,14 +39,25 @@ class LiveTyperSettings(BaseModel):
     chunk_seconds: int = 2
     max_duration_seconds: int = 300
 
+class LiveVoiceSettings(BaseModel):
+    model: str = "gemini-3.8-live"
+    voice_name: str = "Puck"
+    rotation_token_limit: int = 45000
+    rotation_turn_limit: int = 40
+    sample_rate_in: int = 16000
+    sample_rate_out: int = 24000
+    barge_in: bool = True
+
 class VoiceSettings(BaseModel):
     enabled: bool = False
+    mode: str = "live"  # "live" (Gemini 3.8 Live API) or "legacy" (Whisper STT + SAPI TTS)
     trigger_mode: str = "push_to_talk"
     hotkey: str = "ctrl+space"
     stt_engine: str = "whisper"
     tts_engine: str = "sapi"
     max_spoken_sentences: int = 3
     speaking_rate: int = 0
+    live: LiveVoiceSettings = LiveVoiceSettings()
     live_typer: LiveTyperSettings = LiveTyperSettings()
 
 class PathSettings(BaseModel):

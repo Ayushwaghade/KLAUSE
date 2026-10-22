@@ -133,6 +133,25 @@ class SessionContext:
         logger.info(f"SessionContext: Removing connection for session {session_id}")
         self._active_connections.pop(session_id, None)
 
+    def broadcast_to_ui(self, message: dict, session_id: Optional[str] = None):
+        """Thread-safe broadcast of a JSON message payload to UI WebSocket connection(s)."""
+        import asyncio
+        target_connections = []
+        if session_id and session_id in self._active_connections:
+            target_connections.append(self._active_connections[session_id])
+        else:
+            target_connections.extend(self._active_connections.values())
+
+        for ws, loop in target_connections:
+            try:
+                if loop and loop.is_running():
+                    asyncio.run_coroutine_threadsafe(
+                        ws.send_json(message),
+                        loop
+                    )
+            except Exception as e:
+                logger.debug(f"SessionContext: Failed to broadcast to UI: {e}")
+
     def interrupt_session(self, session_id: str):
         logger.warning(f"SessionContext: Interrupt requested for session {session_id}")
         self._interrupted_sessions.add(session_id)

@@ -30,6 +30,7 @@ class TTSEngine:
         self.stop_event = threading.Event()
         self.sapi_voice = None
         self.is_active = HAS_WIN32
+        self._is_speaking = False
         
         if not HAS_WIN32:
             logger.warning("win32com.client not found. TTS will run in offline stub mode.")
@@ -38,6 +39,11 @@ class TTSEngine:
         # Start background worker thread
         self.worker_thread = threading.Thread(target=self._worker, daemon=True)
         self.worker_thread.start()
+
+    @property
+    def is_speaking(self) -> bool:
+        """Returns True if SAPI is currently vocalizing or queued to vocalize."""
+        return getattr(self, "_is_speaking", False) or not self.queue.empty()
 
     def _get_best_voice(self):
         """
@@ -127,14 +133,18 @@ class TTSEngine:
                 text = self.queue.get()
                 if not self.stop_event.is_set() and self.is_active and self.sapi_voice:
                     logger.debug(f"TTS speaking: {text}")
-                    # SVSFlagsAsync = 1 speaks asynchronously so we can poll stop_event or process next
-                    self.sapi_voice.Speak(text, 1)
-                    # Poll while speaking to check for stop interrupt
-                    while not self.sapi_voice.WaitUntilDone(50):
-                        if self.stop_event.is_set():
-                            # Purge speech from within the owner thread!
-                            self.sapi_voice.Speak("", 2)
-                            break
+                    self._is_speaking = True
+                    try:
+                        # SVSFlagsAsync = 1 speaks asynchronously so we can poll stop_event or process next
+                        self.sapi_voice.Speak(text, 1)
+                        # Poll while speaking to check for stop interrupt
+                        while not self.sapi_voice.WaitUntilDone(50):
+                            if self.stop_event.is_set():
+                                # Purge speech from within the owner thread!
+                                self.sapi_voice.Speak("", 2)
+                                break
+                    finally:
+                        self._is_speaking = False
                 self.queue.task_done()
             except Exception as e:
                 logger.error(f"TTS worker exception: {e}")

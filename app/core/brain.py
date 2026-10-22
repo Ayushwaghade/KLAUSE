@@ -1,7 +1,7 @@
 import os
 import re
 import json
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 from loguru import logger
 from google import genai
 from google.genai import types
@@ -18,6 +18,23 @@ from app.core.tool_router import classify_request, escalate_group, get_tool_grou
 import app.tools
 
 from app.core.client import get_gemini_client, get_nvidia_client
+import time
+import concurrent.futures
+
+# Whitelist of side-effect / action tools safe to shortcut directly without a 2nd LLM call
+SHORTCUT_SAFE = {
+    "browser_open",
+    "desktop_open_url",
+    "open_application",
+    "close_application",
+    "set_volume",
+    "window_minimize",
+    "window_maximize",
+    "focus_window",
+}
+
+# Single-worker thread executor for async conversation saves (guarantees ordered writes)
+_save_executor = concurrent.futures.ThreadPoolExecutor(max_workers=1, thread_name_prefix="BrainSaveWorker")
 
 class Brain:
     def __init__(self, dispatcher: Optional[Dispatcher] = None):
@@ -80,7 +97,11 @@ class Brain:
                 },
                 "response": {
                     "type": "string",
-                    "description": "The final answer to the user (only set when action='FINAL')."
+                    "description": "The final answer to the user (set when action='FINAL' or when final_on_success=true)."
+                },
+                "final_on_success": {
+                    "type": "boolean",
+                    "description": "Set to true ONLY if this single action fully satisfies the request on success without needing further steps."
                 }
             },
             "required": ["thought", "action", "params", "response"]
@@ -160,48 +181,192 @@ class Brain:
             raw_text = completion.choices[0].message.content.strip()
             return raw_text
         else:
-            # Gemini Call
+            # Gemini Call via Model Ladder with automatic failure cooldowns
+            from app.core.model_ladder import call_gemini_ladder, FAST, SMART
             from google.genai import types
-            logger.info(f"🧠 Calling Google Gemini model: '{self.model_name}'...")
+
+            tier = SMART if enforce_json else FAST
+            logger.info(f"🧠 Calling Gemini via Model Ladder (preferred: '{self.model_name}', tier: '{tier}')...")
             logger.debug(f"Sending prompt to Gemini {self.model_name}:\n{prompt}")
+
+            config = None
             if enforce_json:
-                response = self.client.models.generate_content(
-                    model=self.model_name,
-                    contents=prompt,
-                    config=types.GenerateContentConfig(
-                        response_mime_type="application/json",
-                        response_schema=self.schema
-                    )
+                config = types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=self.schema
                 )
-            else:
-                response = self.client.models.generate_content(
-                    model=self.model_name,
-                    contents=prompt
-                )
+
+            gemini_key = self.api_key if (self.provider == "gemini" and self.api_key) else (settings.gemini_api_key or os.environ.get("GEMINI_API_KEY"))
+            response = call_gemini_ladder(
+                contents=prompt,
+                tier=tier,
+                config=config,
+                preferred_model=self.model_name,
+                api_key=gemini_key
+            )
             return response.text.strip()
 
+    def _finalize(self, response_text: Optional[str], session_id: str, history: Optional[List[Dict[str, Any]]] = None) -> str:
+        """Centralized helper for finalizing responses, personality defaults, and non-blocking conversation saving."""
+        default_resps = {
+            "hacker": "Code executed, target achieved. We are green.",
+            "architect": "Verification complete. System state is nominal.",
+            "minimalist": "Done.",
+            "supportive": f"I've successfully completed the task for you, {self.user_name}."
+        }
+        pers = getattr(getattr(settings, "klause", None), "personality", "supportive").lower()
+        default_resp = default_resps.get(pers, f"I've successfully completed the task for you, {self.user_name}.")
+
+        base_resp = response_text or default_resp
+        if "task complete" not in base_resp.lower():
+            final_resp = f"{base_resp} [Task complete]"
+        else:
+            final_resp = base_resp
+
+        # Order-preserving, non-blocking save to MongoDB via single-worker executor
+        try:
+            _save_executor.submit(
+                get_memory_manager().save_conversation,
+                session_id=session_id,
+                role="assistant",
+                content=final_resp
+            )
+        except Exception as e:
+            logger.warning(f"Failed to submit assistant save to executor: {e}")
+
+        return final_resp
+
+    def _check_fast_path(self, user_input: str) -> Optional[Tuple[str, Dict[str, Any], str]]:
+        """
+        Deterministic fast-path matching for common single-action tasks.
+        Returns (tool_name, params_dict, response_template) or None.
+        Bypasses LLM entirely when matched to achieve sub-second execution.
+        """
+        text = user_input.strip()
+        
+        # 1. Direct website opens
+        sites = {
+            r"youtube(?:\.com)?": ("https://youtube.com", "YouTube"),
+            r"google(?:\.com)?": ("https://google.com", "Google"),
+            r"github(?:\.com)?": ("https://github.com", "GitHub"),
+            r"reddit(?:\.com)?": ("https://reddit.com", "Reddit"),
+            r"(?:twitter|x)(?:\.com)?": ("https://x.com", "Twitter"),
+            r"gmail(?:\.com)?": ("https://mail.google.com", "Gmail"),
+            r"chatgpt(?:\.com)?": ("https://chatgpt.com", "ChatGPT"),
+            r"claude(?:\.ai)?": ("https://claude.ai", "Claude"),
+        }
+        for site_pattern, (site_url, site_name) in sites.items():
+            pattern = rf"^(?:please\s+)?(?:open|launch|go to)\s+(?:the\s+)?(?:website\s+)?(?:https?:\/\/)?(?:www\.)?{site_pattern}(?:\s+for\s+me)?\??$"
+            if re.match(pattern, text, re.IGNORECASE):
+                return ("browser_open", {"url": site_url}, f"Opened {site_name}.")
+
+        # 2. Generic direct URLs: open https://...
+        url_match = re.match(r"^(?:please\s+)?(?:open|launch|go to)\s+(https?:\/\/\S+)\??$", text, re.IGNORECASE)
+        if url_match:
+            target_url = url_match.group(1)
+            return ("browser_open", {"url": target_url}, f"Opened {target_url}.")
+
+        # 3. Desktop applications from allowlist
+        apps = {
+            r"notepad": ("notepad", "Notepad"),
+            r"(?:calc|calculator)": ("calc", "Calculator"),
+            r"(?:paint|mspaint)": ("mspaint", "Paint"),
+            r"(?:task\s*mgr|task\s*manager)": ("taskmgr", "Task Manager"),
+            r"(?:cmd|command\s*prompt|terminal)": ("cmd", "Command Prompt"),
+            r"(?:explorer|file\s*explorer)": ("explorer", "File Explorer"),
+            r"chrome": ("chrome", "Chrome"),
+            r"brave": ("brave", "Brave"),
+        }
+        for app_pattern, (app_key, app_display) in apps.items():
+            pattern = rf"^(?:please\s+)?(?:open|launch|start)\s+{app_pattern}\??$"
+            if re.match(pattern, text, re.IGNORECASE):
+                return ("open_application", {"app_key": app_key}, f"Launched {app_display}.")
+
+        # 4. Window management
+        if re.match(r"^(?:please\s+)?minimize\s+(?:the\s+)?(?:active\s+)?window\??$", text, re.IGNORECASE):
+            return ("window_minimize", {}, "Minimized active window.")
+        if re.match(r"^(?:please\s+)?maximize\s+(?:the\s+)?(?:active\s+)?window\??$", text, re.IGNORECASE):
+            return ("window_maximize", {}, "Maximized active window.")
+
+        # 5. Git status
+        if re.match(r"^(?:what(?:'s| is) (?:the )?)?git status\??$", text, re.IGNORECASE):
+            return ("git_status", {}, "{result}")
+
+        # 6. Screen description
+        if re.match(r"^(?:what(?:'s| is) on my screen\??|describe (?:my )?screen\??)$", text, re.IGNORECASE):
+            return ("vision_describe_screen", {}, "{result}")
+
+        return None
+
     def think(self, user_input: str, session_id: str = "default_session", step_callback = None) -> str:
+        t0 = time.perf_counter()
         logger.info(f"Received user goal: {user_input} (Session: {session_id})")
         self._cached_codebase_context = None
+
+        # Check deterministic fast-path before any context loading or LLM calls
+        fast_path = self._check_fast_path(user_input)
+        if fast_path:
+            tool_name, params, template = fast_path
+            logger.info(f"⚡ [Fast-Path] Matched '{user_input}' -> {tool_name}({params})")
+            if step_callback:
+                try:
+                    step_callback({
+                        "type": "thought",
+                        "step": 1,
+                        "thought": f"Executing fast-path action: {tool_name}",
+                        "action": tool_name,
+                        "params": params
+                    })
+                except Exception:
+                    pass
+
+            obs = self.dispatcher.execute(tool_name, params)
+
+            if step_callback:
+                try:
+                    step_callback({
+                        "type": "observation",
+                        "step": 1,
+                        "observation": {
+                            "success": obs.success,
+                            "result": obs.result,
+                            "error": obs.error
+                        }
+                    })
+                except Exception:
+                    pass
+
+            if obs.success:
+                logger.info(f"⏱️ [PERF] Fast-path completed in {(time.perf_counter() - t0)*1000:.1f}ms")
+                resp = template.format(result=obs.result)
+                return self._finalize(resp, session_id)
+            else:
+                logger.warning(f"Fast-path execution failed: {obs.error}. Falling back to ReAct loop.")
         
+        # Compute complexity ONCE for both model routing and planning
+        is_complex = self._detect_complexity(user_input)
+
         # Dynamic Model Routing based on request complexity
         import sys
         if getattr(settings.ai, "routing_enabled", False) and "pytest" not in sys.modules:
-            is_complex = self._detect_complexity(user_input)
             if is_complex:
                 self.provider = settings.ai.complex_provider.lower()
                 self.model_name = settings.ai.complex_model
                 if self.provider == "nvidia":
+                    self.api_key = settings.nvidia_api_key or os.environ.get("NVIDIA_API_KEY")
                     self.client = get_nvidia_client()
                 else:
+                    self.api_key = settings.gemini_api_key or os.environ.get("GEMINI_API_KEY")
                     self.client = get_gemini_client()
                 logger.info(f"Model Routing: Complex task detected. Routed to COMPLEX provider '{self.provider}' (Model: '{self.model_name}').")
             else:
                 self.provider = settings.ai.fast_provider.lower()
                 self.model_name = settings.ai.fast_model
                 if self.provider == "nvidia":
+                    self.api_key = settings.nvidia_api_key or os.environ.get("NVIDIA_API_KEY")
                     self.client = get_nvidia_client()
                 else:
+                    self.api_key = settings.gemini_api_key or os.environ.get("GEMINI_API_KEY")
                     self.client = get_gemini_client()
                 logger.info(f"Model Routing: Simple task detected. Routed to FAST provider '{self.provider}' (Model: '{self.model_name}').")
         
@@ -218,7 +383,7 @@ class Brain:
             )
 
         # Detect and pre-load matched skills from cloned skill repository
-        loaded_skill_str = self._maybe_load_relevant_skill(user_input)
+        loaded_skill_str = self._maybe_load_relevant_skill(user_input, is_complex=is_complex)
 
         # Set session context properties
         from app.core.context import context
@@ -261,25 +426,14 @@ class Brain:
                 f"2. You can modify, add, or remove rules in 'rules.md' using the modify_rules tool whenever {self.user_name} explicitly asks you to do so.\n\n"
             )
 
-        # Save user message to MongoDB conversations
-        try:
-            get_memory_manager().save_conversation(
-                session_id=session_id,
-                role="user",
-                content=user_input
-            )
-        except Exception as e:
-            logger.warning(f"Failed to auto-save user conversation: {e}")
-
-        # Retrieve past conversation history from memory manager based on config limits
+        # Retrieve past conversation history FIRST (before async save) to avoid race/duplication
         past_history_str = ""
         try:
-            history_limit = getattr(settings.memory, "max_conversation_history", 50)
+            history_limit = getattr(settings.memory, "max_conversation_history", 15)
             past_messages = get_memory_manager().get_conversation_history(session_id=session_id, limit=history_limit)
             if past_messages:
                 past_history_str = "Previous Conversation Turns:\n"
                 for msg in past_messages:
-                    # Skip the current user_input we just logged to avoid duplication
                     if msg["role"] == "user" and msg["content"] == user_input:
                         continue
                     role_lbl = "User" if msg["role"] == "user" else "KLAUSE"
@@ -288,25 +442,41 @@ class Brain:
         except Exception as e:
             logger.warning(f"Failed to retrieve conversation history: {e}")
 
-        # Retrieve relevant semantic memories (RAG)
-        relevant_memories_str = ""
+        # Non-blocking, ordered write of user message to MongoDB
         try:
-            memories = get_memory_manager().search_semantic_memories(user_input, limit=8)
-            # Filter by relevance: distance < 1.6
-            valid_memories = [m for m in memories if m.get("distance", 2.0) < 1.6]
-            if valid_memories:
-                relevant_memories_str = "Relevant Memories & Context (RAG):\n"
-                for m in valid_memories:
-                    doc_type = m["type"].upper()
-                    meta = m["metadata"] or {}
-                    title_info = f" (Title: {meta.get('title')})" if 'title' in meta else ""
-                    relevant_memories_str += f"  - [{doc_type}]{title_info}: {m['content']}\n"
-                    # Track retrieved notes for Obsidian Canvas connections
-                    if meta.get("title"):
-                        context.track_retrieved_note(meta["title"])
-                relevant_memories_str += "\n"
+            _save_executor.submit(
+                get_memory_manager().save_conversation,
+                session_id=session_id,
+                role="user",
+                content=user_input
+            )
         except Exception as e:
-            logger.warning(f"Failed to retrieve semantic memories: {e}")
+            logger.warning(f"Failed to submit user save to executor: {e}")
+
+        # Retrieve relevant semantic memories (RAG) conditionally (skip for simple actions)
+        relevant_memories_str = ""
+        should_query_rag = is_complex or any(
+            kw in user_input.lower()
+            for kw in ("remember", "recall", "memory", "notes", "last time", "yesterday", "context", "history", "what did we")
+        )
+        if should_query_rag and "pytest" not in sys.modules:
+            try:
+                memories = get_memory_manager().search_semantic_memories(user_input, limit=8)
+                # Filter by relevance: distance < 1.6
+                valid_memories = [m for m in memories if m.get("distance", 2.0) < 1.6]
+                if valid_memories:
+                    relevant_memories_str = "Relevant Memories & Context (RAG):\n"
+                    for m in valid_memories:
+                        doc_type = m["type"].upper()
+                        meta = m["metadata"] or {}
+                        title_info = f" (Title: {meta.get('title')})" if 'title' in meta else ""
+                        relevant_memories_str += f"  - [{doc_type}]{title_info}: {m['content']}\n"
+                        # Track retrieved notes for Obsidian Canvas connections
+                        if meta.get("title"):
+                            context.track_retrieved_note(meta["title"])
+                    relevant_memories_str += "\n"
+            except Exception as e:
+                logger.warning(f"Failed to retrieve semantic memories: {e}")
 
         history: List[Dict[str, Any]] = []
 
@@ -324,13 +494,18 @@ class Brain:
         logger.info(f"Active tool groups: {active_groups} ({tools_str.count(chr(10))+1} tools loaded)")
 
         # ── Component 2: Plan-Then-Execute ──
+        # Only invoke extra LLM plan generation for truly complex multi-step workflows (3+ verbs)
         has_plan = False
         plan_str = ""
-        if self._detect_complexity(user_input):
+        action_verbs_list = ("open", "search", "find", "save", "create", "download", "play", "run", "check", "read", "write", "send", "close", "install", "delete", "move", "copy", "extract", "summarize", "analyze", "browse", "navigate", "configure")
+        verb_count_est = sum(1 for v in action_verbs_list if re.search(r'\b' + re.escape(v) + r'\b', user_input.lower()))
+        if is_complex and verb_count_est >= 3:
             plan_str = self._generate_plan(user_input, tools_str)
             if plan_str:
                 has_plan = True
                 logger.info(f"Execution plan generated ({plan_str.count(chr(10))+1} steps)")
+
+        logger.info(f"⏱️ [PERF] Context loaded in {(time.perf_counter() - t0)*1000:.1f}ms (is_complex={is_complex})")
 
         # ── Component 3 & 4: Failure tracking & dynamic step budget ──
         consecutive_failures = 0
@@ -362,10 +537,11 @@ class Brain:
                 
             active_proj_str = f"Active Project Workspace Path: {context.current_project_path or 'None (You must open a project first using open_project before running terminal/git/vscode tools)'}\n\n"
 
-            # Refresh live system state and build prompt block
+            # Refresh live system state and build prompt block (only when desktop/window/vision tools are relevant)
             state_context_str = ""
             try:
-                if getattr(settings, 'state_machine', None) and settings.state_machine.enabled:
+                needs_telemetry = bool({"window", "desktop", "vision"} & set(active_groups))
+                if needs_telemetry and getattr(settings, 'state_machine', None) and settings.state_machine.enabled:
                     state_machine.refresh()
                     state_block = state_machine.get_prompt_block()
                     if state_block:
@@ -638,7 +814,11 @@ class Brain:
                 "NEVER SAY WHAT YOU ARE ABOUT TO DO: Do not say 'I will now run git_status...' or 'Let me open the browser.' Call the tool. Report the result directly.\n"
                 "BREVITY: Keep final summaries to 1-3 sentences unless presenting lists, search data, or research.\n"
                 "DECISION GATES: Ask only when the choice changes the outcome (e.g. file destinations, options choices). Do not ask about trivial internal tool parameters.\n"
-                f"RESPONSE POPULATION: When setting action='FINAL', you MUST populate the 'response' key with your final conversational message to {self.user_name} (written in your active personality style, addressing them as '{self.user_name}'). Do not leave 'response' empty or rely on default fallback strings.\n\n"
+                f"RESPONSE POPULATION & SHORTCUT RULES:\n"
+                f"1. When setting action='FINAL', you MUST populate the 'response' key with your final conversational message to {self.user_name}.\n"
+                f"2. When invoking an action tool (like browser_open, open_application, close_application) that fully accomplishes the user's entire request in this single action: "
+                f"set final_on_success=true AND populate 'response' with the confirmation message (e.g. 'I have opened YouTube for you, {self.user_name}.'). "
+                f"Never set final_on_success=true if you need to inspect the tool's output data, search, or perform additional steps.\n\n"
                 "════════════════════════════════════════════════════════════\n"
                 "════════════════════════════════════════════════════════════\n\n"
                 "□ Is this a terminal/git operation or script run?\n"
@@ -676,7 +856,10 @@ class Brain:
             )
             
             try:
+                t_llm_start = time.perf_counter()
                 raw_text = self._generate_text_or_json(prompt, enforce_json=True)
+                t_llm = time.perf_counter() - t_llm_start
+                logger.info(f"⏱️ [PERF] Step {step} LLM call completed in {t_llm*1000:.1f}ms (model: {self.model_name})")
                 logger.debug(f"Raw response: {raw_text}")
                 
                 # Clean up any potential markdown wrapper blocks (common in non-Gemini LLMs)
@@ -713,7 +896,7 @@ class Brain:
                     if action_val.upper() != "FINAL":
                         extra_keys = {
                             k: v for k, v in raw_data.items()
-                            if k not in ("thought", "action", "params", "response")
+                            if k not in ("thought", "action", "params", "response", "final_on_success")
                         }
                         if extra_keys:
                             logger.info(f"Self-healing: Found root-level parameters {list(extra_keys.keys())}. Merging into 'params'.")
@@ -724,7 +907,7 @@ class Brain:
                 # Validate response matching AgentAction schema
                 action_data = AgentAction.model_validate(raw_data)
                 logger.info(f"Step {step} Thought: {action_data.thought}")
-                logger.info(f"Step {step} Action: {action_data.action} | Params: {action_data.params}")
+                logger.info(f"Step {step} Action: {action_data.action} | Params: {action_data.params} | final_on_success={action_data.final_on_success}")
 
                 if step_callback:
                     try:
@@ -741,40 +924,39 @@ class Brain:
                 # Check for completion signal
                 if action_data.action.upper() == "FINAL":
                     logger.info("Goal reached. Returning final response.")
+                    total_ms = (time.perf_counter() - t0) * 1000
+                    logger.info(f"⏱️ [PERF] Goal reached in {total_ms:.1f}ms ({step} steps)")
+                    return self._finalize(action_data.response, session_id, history)
                     
-                    # Generate a personality-based default response if empty
-                    default_resps = {
-                        "hacker": "Code executed, target achieved. We are green.",
-                        "architect": "Verification complete. System state is nominal.",
-                        "minimalist": "Done.",
-                        "supportive": f"I've successfully completed the task for you, {self.user_name}."
-                    }
-                    pers = getattr(getattr(settings, "klause", None), "personality", "supportive").lower()
-                    default_resp = default_resps.get(pers, f"I've successfully completed the task for you, {self.user_name}.")
-                    
-                    base_resp = action_data.response or default_resp
-                    # Append "[Task complete]" status to the typed/printed response
-                    if "task complete" not in base_resp.lower():
-                        final_resp = f"{base_resp} [Task complete]"
-                    else:
-                        final_resp = base_resp
-
-                    try:
-                        get_memory_manager().save_conversation(
-                            session_id=session_id,
-                            role="assistant",
-                            content=final_resp
-                        )
-                    except Exception as e:
-                        logger.warning(f"Failed to auto-save assistant response: {e}")
-                    return final_resp
-                    
-                # Execute tool using dispatcher
+                # Execute tool using dispatcher with performance tracking
+                t_tool_start = time.perf_counter()
                 observation = self.dispatcher.execute(action_data.action, action_data.params)
+                t_tool = time.perf_counter() - t_tool_start
+                logger.info(f"⏱️ [PERF] Step {step} Tool '{action_data.action}' executed in {t_tool*1000:.1f}ms (success={observation.success})")
+
                 context.last_tool_used = action_data.action
                 if not observation.success and observation.error:
                     context.last_error = str(observation.error)[:200]
-                logger.info(f"Step {step} Observation success: {observation.success}")
+
+                # ── Fast-Track Shortcut (Skip Call #2) ──
+                if (
+                    observation.success
+                    and getattr(action_data, "final_on_success", False)
+                    and action_data.action in SHORTCUT_SAFE
+                    and action_data.response
+                ):
+                    logger.info(f"⚡ [PERF] Fast-track single-action shortcut triggered for '{action_data.action}'. Skipping second LLM call!")
+                    if step_callback:
+                        try:
+                            step_callback({
+                                "type": "final",
+                                "response": action_data.response
+                            })
+                        except Exception:
+                            pass
+                    total_ms = (time.perf_counter() - t0) * 1000
+                    logger.info(f"⏱️ [PERF] Goal completed via shortcut in {total_ms:.1f}ms")
+                    return self._finalize(action_data.response, session_id, history)
 
                 # ── Component 3: Track consecutive failures ──
                 if not observation.success:
@@ -855,39 +1037,41 @@ class Brain:
     def _detect_complexity(self, user_input: str) -> bool:
         """
         Determines if a user request is complex enough to route to the heavy model.
-        Returns True if the task is complex/detailed coding/research, has multiple steps,
-        contains specific complex keywords, or exceeds a length threshold.
+        Returns True for deep coding/research, multi-file refactoring, or multi-step workflows.
+        Simple commands, single actions, and basic queries stay on the fast model.
         """
         text = user_input.lower()
         
-        # 1. Check for complex task keywords (research, coding, analysis)
-        complex_keywords = [
-            "research", "detailed", "explain", "document", "summary", "summarize",
-            "write a report", "report", "cyber security", "analysis", "analyze",
-            "investigate", "comparative", "code", "program", "script", "write a class",
-            "implement", "refactor", "fix a bug", "debug", "develop", "build an app",
-            "how does", "why does", "architect", "architecture", "design", "solve"
+        # 1. Deep analytical / multi-step phrases (avoids single common words like "code", "run", "open")
+        deep_phrases = [
+            "research", "write a report", "detailed report", "security audit",
+            "vulnerability analysis", "comparative analysis", "code review",
+            "refactor", "implement architecture", "system design", "build an app",
+            "full stack", "multi-step", "step by step analysis", "deep dive"
         ]
-        has_complex_keyword = any(kw in text for kw in complex_keywords)
-        
-        # 2. Check for action verbs and conjunctions (multi-step workflow)
+        has_deep_phrase = any(phrase in text for phrase in deep_phrases)
+
+        # 2. Action verbs and explicit multi-step conjunctions
         action_verbs = [
             "open", "search", "find", "save", "create", "download", "play",
             "run", "check", "read", "write", "send", "close", "install",
             "delete", "move", "copy", "extract", "summarize", "analyze",
-            "browse", "navigate", "look up", "set up", "configure"
+            "browse", "navigate", "configure"
         ]
-        conjunctions = [" and ", " then ", " also ", " after that ", " next ", " finally "]
-
+        conjunctions = [" and then ", " after that ", " next ", " finally ", " and also "]
+        
         verb_count = sum(1 for v in action_verbs if re.search(r'\b' + re.escape(v) + r'\b', text))
-        has_conjunction = any(c in text for c in conjunctions)
-        has_multi_step = verb_count >= 2 or has_conjunction
+        has_sequence_conjunction = any(c in text for c in conjunctions)
         
-        # 3. Check length threshold (longer sentences usually indicate detailed prompts)
-        is_long = len(user_input) > 80
+        # Truly multi-step: multiple distinct actions chained with sequential transitions or 3+ actions
+        has_multi_step = (verb_count >= 2 and has_sequence_conjunction) or verb_count >= 3
         
-        is_complex = has_complex_keyword or has_multi_step or is_long
-        logger.info(f"🧠 Complexity Router: keyword={has_complex_keyword}, multi_step={has_multi_step}, long={is_long} -> complex={is_complex}")
+        # Length threshold (detailed instructions > 160 chars)
+        is_long = len(user_input) > 160
+        
+        # Complex if: explicit deep phrase, multi-step chain, or long prompt with multiple actions
+        is_complex = has_deep_phrase or has_multi_step or (is_long and verb_count >= 2)
+        logger.info(f"🧠 Complexity Router: deep={has_deep_phrase}, multi_step={has_multi_step}, long={is_long} -> complex={is_complex}")
         return is_complex
 
     def _generate_plan(self, user_input: str, tools_str: str) -> str:
@@ -990,14 +1174,32 @@ class Brain:
             "DO NOT repeat the same failing call. Change your strategy.\n"
         ).format(n=consecutive_failures, tool_hint=tool_hint)
 
-    def _maybe_load_relevant_skill(self, user_input: str) -> str:
+    def _maybe_load_relevant_skill(self, user_input: str, is_complex: bool = False) -> str:
         """Lightweight pre-check — does this request match a known skill?"""
+        if not is_complex:
+            return ""
+
         from app.core.skill_repo import get_skill_summaries, load_skill_full_text
         try:
             summaries = get_skill_summaries()
             if not summaries.strip():
                 return ""
         except Exception:
+            return ""
+
+        lower_input = user_input.lower()
+        # Fast direct match on skill names before falling back to LLM
+        for line in summaries.split("\n"):
+            if ":" in line:
+                s_name = line.split(":")[0].replace("-", "").strip()
+                if s_name and s_name.lower() in lower_input:
+                    skill_text = load_skill_full_text(s_name)
+                    if skill_text:
+                        logger.info(f"Auto-loaded skill by direct match: {s_name}")
+                        return f"\n\nLOADED EXPERT SKILL — {s_name}:\n{skill_text}\n\n"
+
+        # Gate LLM check to explicit expert or skill terminology
+        if not any(w in lower_input for w in ("skill", "expert", "guide", "workflow", "architecture", "audit", "security", "diagram", "benchmark")):
             return ""
 
         check_prompt = f"""
@@ -1013,9 +1215,7 @@ class Brain:
         result = self._quick_llm_call(check_prompt).strip()
 
         if result and result.lower() != "none":
-            # Strip potential quotes/md formatting
             clean_result = result.replace("`", "").replace("'", "").replace('"', "").strip()
-            # If the output returned has newlines, take the first line
             clean_result = clean_result.split("\n")[0].strip()
             
             skill_text = load_skill_full_text(clean_result)

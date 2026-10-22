@@ -145,13 +145,27 @@ class Dispatcher:
             
             # Execute actual function
             result = tool_inst.func(**kwargs)
+            res_str = str(result).strip()
+            
+            # Detect string-level error responses returned without exceptions
+            is_err_str = res_str.lower().startswith(("error:", "error ", "failed:", "failure:"))
+            if is_err_str:
+                logger.warning(f"Tool '{tool_name}' returned error output: {res_str[:120]}")
+                context.last_error = res_str[:200]
+                return ToolObservation(
+                    tool_name=tool_name,
+                    success=False,
+                    result="",
+                    error=res_str
+                )
+
             logger.info(f"Tool '{tool_name}' execution succeeded.")
             context.last_tool_used = tool_name
             
             return ToolObservation(
                 tool_name=tool_name,
                 success=True,
-                result=str(result),
+                result=res_str,
                 error=None
             )
             

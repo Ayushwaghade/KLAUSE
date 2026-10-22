@@ -23,12 +23,21 @@ memory:
   max_conversation_history: 100
 voice:
   enabled: true
-  trigger_mode: wake_word
+  mode: live
+  trigger_mode: continuous
   hotkey: ctrl+space
   stt_engine: whisper
   tts_engine: sapi
   max_spoken_sentences: 3
   speaking_rate: 0
+  live:
+    model: gemini-3.8-live
+    voice_name: Puck
+    rotation_token_limit: 45000
+    rotation_turn_limit: 40
+    sample_rate_in: 16000
+    sample_rate_out: 24000
+    barge_in: true
   live_typer:
     hotkey: ctrl+shift+v
     chunk_seconds: 2
@@ -61,6 +70,5 @@ automation:
 browser:
   prefer: brave
   profile_directory: Default
-
 desktop_macro:
   enabled: false
