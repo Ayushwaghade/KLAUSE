@@ -51,6 +51,7 @@ class Brain:
         self.max_steps = settings.ai.max_steps
         self.dispatcher = dispatcher or Dispatcher()
         self._cached_codebase_context = None
+        self._continuation_states: Dict[str, Dict[str, Any]] = {}
         # Build properties for params dynamically based on registered tools in tool_registry
         import inspect
         from app.tools.base import tool_registry
@@ -208,6 +209,9 @@ class Brain:
 
     def _finalize(self, response_text: Optional[str], session_id: str, history: Optional[List[Dict[str, Any]]] = None) -> str:
         """Centralized helper for finalizing responses, personality defaults, and non-blocking conversation saving."""
+        # Clear continuation state upon task completion
+        self._clear_continuation(session_id)
+
         default_resps = {
             "hacker": "Code executed, target achieved. We are green.",
             "architect": "Verification complete. System state is nominal.",
@@ -235,6 +239,177 @@ class Brain:
             logger.warning(f"Failed to submit assistant save to executor: {e}")
 
         return final_resp
+
+    def _get_continuation_filepath(self, session_id: str) -> str:
+        safe_id = re.sub(r'[^\w\-]', '_', str(session_id))
+        return os.path.join("data", "continuations", f"{safe_id}.json")
+
+    def _serialize_history(self, history: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Serializes history objects into JSON-safe dictionaries with observation character limits."""
+        serialized = []
+        for h in history:
+            obs = h.get("observation")
+            if hasattr(obs, "success"):
+                is_success = obs.success
+                raw_res = obs.result
+                err_val = str(obs.error) if obs.error else None
+            elif isinstance(obs, dict):
+                is_success = obs.get("success", True)
+                raw_res = obs.get("result", "")
+                err_val = str(obs.get("error")) if obs.get("error") else None
+            else:
+                is_success = True
+                raw_res = obs
+                err_val = None
+
+            if isinstance(raw_res, (dict, list)):
+                res_val = json.dumps(raw_res)
+            else:
+                res_val = str(raw_res or "")
+
+            if len(res_val) > 4000:
+                res_val = res_val[:4000] + f"... [Truncated {len(res_val) - 4000} chars]"
+
+            serialized.append({
+                "thought": str(h.get("thought", "")),
+                "action": str(h.get("action", "")),
+                "params": h.get("params", {}),
+                "observation": {
+                    "success": is_success,
+                    "result": res_val,
+                    "error": err_val
+                }
+            })
+        return serialized
+
+    def _deserialize_history(self, serialized_history: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Reconstructs history list with ToolObservation instances from serialized dicts."""
+        from app.models.agent import ToolObservation
+        history = []
+        for item in serialized_history:
+            obs_data = item.get("observation", {})
+            action_name = item.get("action", "unknown")
+            if isinstance(obs_data, dict):
+                obs = ToolObservation(
+                    tool_name=action_name,
+                    success=obs_data.get("success", True),
+                    result=str(obs_data.get("result", "")),
+                    error=obs_data.get("error")
+                )
+            elif hasattr(obs_data, "success"):
+                obs = obs_data
+            else:
+                obs = ToolObservation(tool_name=action_name, success=True, result=str(obs_data))
+
+            history.append({
+                "thought": item.get("thought", ""),
+                "action": item.get("action", ""),
+                "params": item.get("params", {}),
+                "observation": obs
+            })
+        return history
+
+    def _save_continuation(
+        self,
+        session_id: str,
+        original_goal: str,
+        history: List[Dict[str, Any]],
+        provider: str,
+        model_name: str,
+        is_complex: bool,
+        active_groups: List[str],
+        plan_str: str = ""
+    ) -> None:
+        """Saves active task state for multi-turn continuation."""
+        serialized_history = self._serialize_history(history)
+        state = {
+            "original_goal": original_goal,
+            "history": serialized_history,
+            "provider": provider,
+            "model_name": model_name,
+            "is_complex": is_complex,
+            "active_groups": active_groups,
+            "plan_str": plan_str,
+            "step_count": len(history),
+            "timestamp": time.time()
+        }
+        self._continuation_states[session_id] = state
+        try:
+            filepath = self._get_continuation_filepath(session_id)
+            os.makedirs(os.path.dirname(filepath), exist_ok=True)
+            with open(filepath, "w", encoding="utf-8") as f:
+                json.dump(state, f, indent=2)
+            logger.info(f"Task continuation state saved for session '{session_id}' ({len(history)} steps, provider: {provider}, model: {model_name}).")
+        except Exception as e:
+            logger.warning(f"Failed to persist continuation state to disk for session '{session_id}': {e}")
+
+    def _get_continuation(self, session_id: str) -> Optional[Dict[str, Any]]:
+        """Retrieves active continuation state from memory or disk."""
+        if session_id in self._continuation_states:
+            return self._continuation_states[session_id]
+
+        filepath = self._get_continuation_filepath(session_id)
+        if os.path.exists(filepath):
+            try:
+                with open(filepath, "r", encoding="utf-8") as f:
+                    state = json.load(f)
+                self._continuation_states[session_id] = state
+                return state
+            except Exception as e:
+                logger.warning(f"Failed to load continuation state from disk for session '{session_id}': {e}")
+        return None
+
+    def _clear_continuation(self, session_id: str) -> None:
+        """Clears continuation state from memory and disk upon completion or abandonment."""
+        self._continuation_states.pop(session_id, None)
+        try:
+            filepath = self._get_continuation_filepath(session_id)
+            if os.path.exists(filepath):
+                os.remove(filepath)
+                logger.info(f"Cleared continuation state disk file for session '{session_id}'.")
+        except Exception as e:
+            logger.warning(f"Failed to delete continuation state file for session '{session_id}': {e}")
+
+    def _is_continuation_trigger(self, user_input: str) -> bool:
+        """Determines if the user input is a follow-up directive to continue an existing task."""
+        text = user_input.strip().lower()
+        if not text:
+            return False
+
+        if any(neg in text for neg in ["don't continue", "dont continue", "stop", "cancel", "abort", "nevermind", "never mind", "discontinue"]):
+            return False
+
+        direct_keywords = [
+            "continue", "proceed", "go on", "keep going", "resume",
+            "carry on", "finish it", "finish this", "finish up", "keep at it",
+            "keep working", "next step", "next steps"
+        ]
+        for kw in direct_keywords:
+            if re.search(r'\b' + re.escape(kw) + r'\b', text):
+                return True
+
+        clean_text = re.sub(r'[^\w\s]', '', text).strip()
+        short_words = clean_text.split()
+        if len(short_words) <= 3:
+            affirmatives = {"yes", "sure", "ok", "okay", "yep", "yeah", "yup", "do it", "please do", "go ahead"}
+            if clean_text in affirmatives or any(w in affirmatives for w in short_words):
+                return True
+
+        return False
+
+    def _check_continuation(self, user_input: str, session_id: str) -> Tuple[bool, Optional[Dict[str, Any]]]:
+        """
+        Checks whether the incoming prompt is a continuation of a previously paused task.
+        Returns (is_continuation, continuation_state).
+        """
+        cont_state = self._get_continuation(session_id)
+        if not cont_state:
+            return False, None
+
+        if self._is_continuation_trigger(user_input):
+            return True, cont_state
+
+        return False, cont_state
 
     def _check_fast_path(self, user_input: str) -> Optional[Tuple[str, Dict[str, Any], str]]:
         """
@@ -343,32 +518,60 @@ class Brain:
             else:
                 logger.warning(f"Fast-path execution failed: {obs.error}. Falling back to ReAct loop.")
         
-        # Compute complexity ONCE for both model routing and planning
-        is_complex = self._detect_complexity(user_input)
+        # Check task continuation
+        is_continuation, cont_state = self._check_continuation(user_input, session_id)
 
-        # Dynamic Model Routing based on request complexity
-        import sys
-        if getattr(settings.ai, "routing_enabled", False) and "pytest" not in sys.modules:
-            if is_complex:
-                self.provider = settings.ai.complex_provider.lower()
-                self.model_name = settings.ai.complex_model
+        if is_continuation and cont_state:
+            is_complex = cont_state.get("is_complex", True)
+            saved_provider = cont_state.get("provider")
+            saved_model = cont_state.get("model_name")
+            if saved_provider:
+                self.provider = saved_provider
+            if saved_model:
+                self.model_name = saved_model
+
+            import sys
+            if getattr(settings.ai, "routing_enabled", False) and "pytest" not in sys.modules and saved_provider and saved_model:
                 if self.provider == "nvidia":
                     self.api_key = settings.nvidia_api_key or os.environ.get("NVIDIA_API_KEY")
                     self.client = get_nvidia_client()
                 else:
                     self.api_key = settings.gemini_api_key or os.environ.get("GEMINI_API_KEY")
                     self.client = get_gemini_client()
-                logger.info(f"Model Routing: Complex task detected. Routed to COMPLEX provider '{self.provider}' (Model: '{self.model_name}').")
+                logger.info(f"Model Routing [CONTINUATION]: Preserving previous provider '{self.provider}' (Model: '{self.model_name}') across turn continuation.")
             else:
-                self.provider = settings.ai.fast_provider.lower()
-                self.model_name = settings.ai.fast_model
-                if self.provider == "nvidia":
-                    self.api_key = settings.nvidia_api_key or os.environ.get("NVIDIA_API_KEY")
-                    self.client = get_nvidia_client()
+                logger.info(f"Task Continuation: Preserved provider '{self.provider}' and model '{self.model_name}'.")
+        else:
+            if cont_state is not None:
+                logger.info(f"User issued a new command. Clearing previous continuation state for session '{session_id}'.")
+                self._clear_continuation(session_id)
+
+            # Compute complexity ONCE for both model routing and planning
+            is_complex = self._detect_complexity(user_input)
+
+            # Dynamic Model Routing based on request complexity
+            import sys
+            if getattr(settings.ai, "routing_enabled", False) and "pytest" not in sys.modules:
+                if is_complex:
+                    self.provider = settings.ai.complex_provider.lower()
+                    self.model_name = settings.ai.complex_model
+                    if self.provider == "nvidia":
+                        self.api_key = settings.nvidia_api_key or os.environ.get("NVIDIA_API_KEY")
+                        self.client = get_nvidia_client()
+                    else:
+                        self.api_key = settings.gemini_api_key or os.environ.get("GEMINI_API_KEY")
+                        self.client = get_gemini_client()
+                    logger.info(f"Model Routing: Complex task detected. Routed to COMPLEX provider '{self.provider}' (Model: '{self.model_name}').")
                 else:
-                    self.api_key = settings.gemini_api_key or os.environ.get("GEMINI_API_KEY")
-                    self.client = get_gemini_client()
-                logger.info(f"Model Routing: Simple task detected. Routed to FAST provider '{self.provider}' (Model: '{self.model_name}').")
+                    self.provider = settings.ai.fast_provider.lower()
+                    self.model_name = settings.ai.fast_model
+                    if self.provider == "nvidia":
+                        self.api_key = settings.nvidia_api_key or os.environ.get("NVIDIA_API_KEY")
+                        self.client = get_nvidia_client()
+                    else:
+                        self.api_key = settings.gemini_api_key or os.environ.get("GEMINI_API_KEY")
+                        self.client = get_gemini_client()
+                    logger.info(f"Model Routing: Simple task detected. Routed to FAST provider '{self.provider}' (Model: '{self.model_name}').")
         
         # Reset state machine tracking at start of new request turn
         try:
@@ -478,10 +681,37 @@ class Brain:
             except Exception as e:
                 logger.warning(f"Failed to retrieve semantic memories: {e}")
 
-        history: List[Dict[str, Any]] = []
+        if is_continuation and cont_state:
+            history = self._deserialize_history(cont_state.get("history", []))
+            prior_steps = len(history)
+            original_goal = cont_state.get("original_goal", user_input)
+
+            # Merge previous active groups with any from user_input
+            prev_groups = cont_state.get("active_groups", [])
+            curr_groups = classify_request(user_input)
+            active_groups = list(dict.fromkeys(prev_groups + curr_groups))
+            plan_str = cont_state.get("plan_str", "")
+            has_plan = bool(plan_str)
+
+            effective_goal = (
+                f"{original_goal}\n"
+                f"[CONTINUATION NOTE: You previously executed {prior_steps} steps towards this goal before pausing. "
+                f"The research and actions taken so far are detailed in 'Current Progress' below. "
+                f"The user has commanded: '{user_input}'. "
+                f"CONTINUE from step {prior_steps + 1} and complete the remaining work. "
+                f"DO NOT repeat previously completed research or tool calls unless necessary.]"
+            )
+            logger.info(f"Task Continuation activated for session '{session_id}': resuming from step {prior_steps + 1} with {prior_steps} prior observations.")
+        else:
+            history = []
+            prior_steps = 0
+            original_goal = user_input
+            effective_goal = user_input
+            active_groups = classify_request(user_input)
+            has_plan = False
+            plan_str = ""
 
         # ── Component 1: Smart Tool Group Filtering ──
-        active_groups = classify_request(user_input)
         tools_str = get_tool_definitions_for_groups(active_groups)
         from app.tools.desktop_tools import is_macro_enabled
 
@@ -494,24 +724,23 @@ class Brain:
         logger.info(f"Active tool groups: {active_groups} ({tools_str.count(chr(10))+1} tools loaded)")
 
         # ── Component 2: Plan-Then-Execute ──
-        # Only invoke extra LLM plan generation for truly complex multi-step workflows (3+ verbs)
-        has_plan = False
-        plan_str = ""
-        action_verbs_list = ("open", "search", "find", "save", "create", "download", "play", "run", "check", "read", "write", "send", "close", "install", "delete", "move", "copy", "extract", "summarize", "analyze", "browse", "navigate", "configure")
-        verb_count_est = sum(1 for v in action_verbs_list if re.search(r'\b' + re.escape(v) + r'\b', user_input.lower()))
-        if is_complex and verb_count_est >= 3:
-            plan_str = self._generate_plan(user_input, tools_str)
-            if plan_str:
-                has_plan = True
-                logger.info(f"Execution plan generated ({plan_str.count(chr(10))+1} steps)")
+        # Only invoke extra LLM plan generation for truly complex multi-step workflows (3+ verbs) if not continuing
+        if not is_continuation and is_complex:
+            action_verbs_list = ("open", "search", "find", "save", "create", "download", "play", "run", "check", "read", "write", "send", "close", "install", "delete", "move", "copy", "extract", "summarize", "analyze", "browse", "navigate", "configure")
+            verb_count_est = sum(1 for v in action_verbs_list if re.search(r'\b' + re.escape(v) + r'\b', user_input.lower()))
+            if verb_count_est >= 3:
+                plan_str = self._generate_plan(user_input, tools_str)
+                if plan_str:
+                    has_plan = True
+                    logger.info(f"Execution plan generated ({plan_str.count(chr(10))+1} steps)")
 
         logger.info(f"⏱️ [PERF] Context loaded in {(time.perf_counter() - t0)*1000:.1f}ms (is_complex={is_complex})")
 
         # ── Component 3 & 4: Failure tracking & dynamic step budget ──
         consecutive_failures = 0
         last_failed_tool = None
-        step_budget = self.max_steps  # starts at 10
-        step = 0
+        step_budget = prior_steps + self.max_steps  # e.g., 0+10=10 on Turn 1, 10+10=20 on Turn 2
+        step = prior_steps
 
         while step < step_budget:
             step += 1
@@ -520,19 +749,42 @@ class Brain:
             # Check for interrupt signal
             if context.is_interrupted(session_id):
                 logger.warning(f"ReAct Loop: Session {session_id} has been interrupted. Terminating loop.")
+                self._clear_continuation(session_id)
                 return f"Execution interrupted by you, {self.user_name}. Operations terminated."
             
             # Format history for LLM prompt
             history_str = ""
             for idx, h in enumerate(history, 1):
+                obs = h.get('observation')
+                if hasattr(obs, 'success'):
+                    is_success = obs.success
+                    raw_res = obs.result
+                    err_val = str(obs.error or 'None')
+                elif isinstance(obs, dict):
+                    is_success = obs.get('success', True)
+                    raw_res = obs.get('result', "")
+                    err_val = str(obs.get('error', 'None') or 'None')
+                else:
+                    is_success = True
+                    raw_res = obs
+                    err_val = 'None'
+
+                if isinstance(raw_res, (dict, list)):
+                    res_val = json.dumps(raw_res)
+                else:
+                    res_val = str(raw_res or "")
+
+                if len(res_val) > 2500:
+                    res_val = res_val[:2500] + f"... [Truncated {len(res_val)-2500} characters]"
+
                 history_str += (
                     f"\nStep {idx}:\n"
                     f"Thought: {h['thought']}\n"
                     f"Action: {h['action']}\n"
                     f"Params: {json.dumps(h['params'])}\n"
-                    f"Observation: {'Success' if h['observation'].success else 'Failure'}. "
-                    f"Result: {h['observation'].result} "
-                    f"Error: {h['observation'].error or 'None'}\n"
+                    f"Observation: {'Success' if is_success else 'Failure'}. "
+                    f"Result: {res_val} "
+                    f"Error: {err_val}\n"
                 )
                 
             active_proj_str = f"Active Project Workspace Path: {context.current_project_path or 'None (You must open a project first using open_project before running terminal/git/vscode tools)'}\n\n"
@@ -849,7 +1101,7 @@ class Brain:
                 f"{relevant_memories_str}"
                 f"{past_history_str}"
                 f"{codebase_context_str}"
-                f"User Goal: {user_input}\n\n"
+                f"User Goal: {effective_goal}\n\n"
                 f"{plan_str}"
                 f"Current Progress:\n{history_str or 'No steps taken yet.'}\n"
                 f"{self._build_reflection_block(consecutive_failures, last_failed_tool)}"
@@ -1010,10 +1262,26 @@ class Brain:
                 logger.exception(error_msg)
                 return f"Sorry, I encountered an error running the agent loop: {e}"
                 
-        # Limit reached
-        warning_msg = f"KLAUSE reached the step budget of {step_budget} without resolving the goal."
+        # Limit reached - save continuation state for seamless multi-turn resumption
+        self._save_continuation(
+            session_id=session_id,
+            original_goal=original_goal,
+            history=history,
+            provider=self.provider,
+            model_name=self.model_name,
+            is_complex=is_complex,
+            active_groups=active_groups,
+            plan_str=plan_str
+        )
+
+        warning_msg = f"KLAUSE reached the step budget of {step_budget} steps. Pausing execution."
         logger.warning(warning_msg)
-        final_resp = f"Warning: I was unable to complete the task within {step_budget} steps. Last progress: {history[-1]['thought'] if history else 'None'}"
+        last_thought = history[-1]['thought'] if history else 'None'
+        final_resp = (
+            f"I've reached the step limit ({step_budget} steps) while working on this task. "
+            f"Current progress: {last_thought}. "
+            f"Say 'continue' to let me proceed from where I left off."
+        )
         try:
             get_memory_manager().save_conversation(
                 session_id=session_id,
