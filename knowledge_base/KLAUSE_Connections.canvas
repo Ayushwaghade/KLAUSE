@@ -878,6 +878,56 @@
       "width": 280,
       "height": 50,
       "color": "6"
+    },
+    {
+      "id": "516652cc",
+      "type": "text",
+      "text": "\ud83d\udcac **Query** (2026-10-23 00:05)\nPLAY THE SONG BAIRAN FOR ME",
+      "x": 0,
+      "y": 10070,
+      "width": 300,
+      "height": 80,
+      "color": "4"
+    },
+    {
+      "id": "9ddff01f",
+      "type": "text",
+      "text": "\ud83d\udcac **Query** (2026-10-23 16:06)\nheyyy see i am using gemini live api for your voice specifically puck's voice what other voices do gemini have",
+      "x": 0,
+      "y": 10230,
+      "width": 300,
+      "height": 80,
+      "color": "4"
+    },
+    {
+      "id": "a54bc0ff",
+      "type": "text",
+      "text": "\ud83c\udf10 https://www.google.com/search?q=gemini+live+api+available+vo",
+      "x": -400,
+      "y": 10230,
+      "width": 280,
+      "height": 50,
+      "color": "6"
+    },
+    {
+      "id": "a5520a44",
+      "type": "text",
+      "text": "\ud83d\udcac **Query** (2026-10-23 16:07)\nlets try Kore",
+      "x": 0,
+      "y": 10390,
+      "width": 300,
+      "height": 80,
+      "color": "4"
+    },
+    {
+      "id": "1b356afc",
+      "type": "text",
+      "text": "\ud83c\udf10 https://aistudio.google.com/app/live/settings",
+      "x": -400,
+      "y": 10390,
+      "width": 280,
+      "height": 50,
+      "color": "6"
     }
   ],
   "edges": [
@@ -3366,6 +3416,38 @@
       "fromNode": "2c82abe8",
       "fromSide": "left",
       "toNode": "bdd37aba",
+      "toSide": "right",
+      "label": "referenced"
+    },
+    {
+      "id": "05b8126d",
+      "fromNode": "516652cc",
+      "fromSide": "left",
+      "toNode": "286949a8",
+      "toSide": "right",
+      "label": "referenced"
+    },
+    {
+      "id": "336e0983",
+      "fromNode": "516652cc",
+      "fromSide": "left",
+      "toNode": "a080d2d5",
+      "toSide": "right",
+      "label": "referenced"
+    },
+    {
+      "id": "06f1ad10",
+      "fromNode": "9ddff01f",
+      "fromSide": "left",
+      "toNode": "a54bc0ff",
+      "toSide": "right",
+      "label": "referenced"
+    },
+    {
+      "id": "5b4d0d1a",
+      "fromNode": "a5520a44",
+      "fromSide": "left",
+      "toNode": "1b356afc",
       "toSide": "right",
       "label": "referenced"
     }
