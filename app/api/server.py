@@ -99,17 +99,115 @@ def open_project_workspace(path: str = Body(..., embed=True)):
     context.current_project_path = os.path.abspath(path)
     return {"status": "success", "active_project": context.current_project_path}
 
+class TaskCreate(BaseModel):
+    title: str
+    description: str = ""
+    status: str = "pending"
+    priority: str = "medium"
+    project_id: str = "global"
+
 @app.get("/api/tasks", tags=["Tasks"], dependencies=[Depends(verify_token)])
 def list_tasks():
-    """Fetch tasks for Kanban board."""
+    """Fetch tasks for Kanban board, automatically syncing scheduled jobs."""
     try:
         mgr = get_memory_manager()
-        tasks = list(mgr.db.tasks.find())
+        
+        # Automatically sync any active scheduled jobs into db.tasks
+        active_jobs = scheduler.list_jobs()
+        for job in active_jobs:
+            jid = job["job_id"]
+            cmd = job.get("command", "")
+            next_run = job.get("next_run_time_local", "")
+            human_sch = job.get("human_schedule", "Scheduled")
+            trigger = job.get("trigger", "")
+            
+            mgr.db.tasks.update_one(
+                {"job_id": jid, "type": "scheduled"},
+                {"$set": {
+                    "project_id": "global",
+                    "title": f"[Scheduled] {jid}",
+                    "description": f"Command: `{cmd}` | Schedule: {human_sch}",
+                    "priority": "medium",
+                    "type": "scheduled",
+                    "job_id": jid,
+                    "command": cmd,
+                    "schedule": human_sch,
+                    "human_schedule": human_sch,
+                    "next_run": next_run,
+                    "trigger": trigger,
+                    "updated_at": datetime.datetime.utcnow()
+                }, "$setOnInsert": {
+                    "status": "pending",
+                    "created_at": datetime.datetime.utcnow()
+                }},
+                upsert=True
+            )
+            
+        tasks = list(mgr.db.tasks.find().sort("created_at", -1))
         result = []
         for t in tasks:
             t["id"] = str(t.pop("_id"))
+            if t.get("status") not in ("pending", "in_progress", "done"):
+                t["status"] = "pending"
+            if "priority" not in t:
+                t["priority"] = "medium"
+            if "project_id" not in t:
+                t["project_id"] = "global"
+            for k, v in list(t.items()):
+                if isinstance(v, datetime.datetime):
+                    t[k] = v.isoformat()
             result.append(t)
         return result
+    except Exception as e:
+        logger.error(f"Error fetching tasks: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/tasks", tags=["Tasks"], dependencies=[Depends(verify_token)])
+def create_task(data: TaskCreate):
+    """Creates a new manual task on the Kanban board."""
+    try:
+        mgr = get_memory_manager()
+        now = datetime.datetime.utcnow()
+        new_doc = {
+            "title": data.title,
+            "description": data.description,
+            "status": data.status if data.status in ("pending", "in_progress", "done") else "pending",
+            "priority": data.priority if data.priority in ("low", "medium", "high") else "medium",
+            "project_id": data.project_id or "global",
+            "type": "manual",
+            "created_at": now,
+            "updated_at": now
+        }
+        res = mgr.db.tasks.insert_one(new_doc)
+        new_doc["id"] = str(res.inserted_id)
+        new_doc.pop("_id", None)
+        return {"status": "success", "task": new_doc}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/tasks/{task_id}", tags=["Tasks"], dependencies=[Depends(verify_token)])
+def delete_task(task_id: str):
+    """Deletes a task by ID. If it is a scheduled job, also removes it from scheduler."""
+    try:
+        mgr = get_memory_manager()
+        existing = None
+        try:
+            existing = mgr.db.tasks.find_one({"_id": ObjectId(task_id)})
+        except Exception:
+            existing = mgr.db.tasks.find_one({"id": task_id}) or mgr.db.tasks.find_one({"job_id": task_id})
+            
+        if existing and existing.get("type") == "scheduled" and existing.get("job_id"):
+            scheduler.remove_job(existing["job_id"])
+            
+        if existing:
+            mgr.db.tasks.delete_one({"_id": existing["_id"]})
+        else:
+            try:
+                mgr.db.tasks.delete_one({"_id": ObjectId(task_id)})
+            except Exception:
+                mgr.db.tasks.delete_one({"job_id": task_id})
+                
+        return {"status": "success", "message": f"Task '{task_id}' deleted."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -175,6 +273,13 @@ def add_cron_schedule(job_id: str = Body(...), command: str = Body(...), cron_ex
     if "Error" in res:
         raise HTTPException(status_code=400, detail=res)
     return {"status": "success", "message": res}
+
+@app.post("/api/schedule/{job_id}/run", tags=["Schedule"], dependencies=[Depends(verify_token)])
+def run_scheduled_job(job_id: str):
+    """Triggers an immediate out-of-band execution of a scheduled job."""
+    if scheduler.run_job_now(job_id):
+        return {"status": "success", "message": f"Job '{job_id}' triggered immediately."}
+    raise HTTPException(status_code=404, detail=f"Scheduled job '{job_id}' not found.")
 
 @app.delete("/api/schedule/{job_id}", tags=["Schedule"], dependencies=[Depends(verify_token)])
 def delete_schedule_job(job_id: str):

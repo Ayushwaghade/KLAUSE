@@ -12,6 +12,13 @@ export interface Task {
   description: string;
   status: 'pending' | 'in_progress' | 'done';
   priority: 'low' | 'medium' | 'high';
+  type?: 'scheduled' | 'execution_log' | 'manual';
+  job_id?: string;
+  command?: string;
+  next_run?: string;
+  schedule?: string;
+  human_schedule?: string;
+  success?: boolean;
 }
 
 export interface Rule {
@@ -28,6 +35,8 @@ export interface ScheduleJob {
   command: string;
   trigger: string;
   next_run_time_local: string;
+  human_schedule?: string;
+  timezone?: string;
 }
 
 export interface ChatMessage {

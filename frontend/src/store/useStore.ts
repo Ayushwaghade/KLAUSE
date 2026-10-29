@@ -43,6 +43,9 @@ interface StoreState {
   removeRule: (ruleId: string) => Promise<void>;
   addScheduleCron: (jobId: string, command: string, cron: string) => Promise<void>;
   removeScheduleJob: (jobId: string) => Promise<void>;
+  runScheduleJob: (jobId: string) => Promise<void>;
+  createTask: (taskData: Partial<Task>) => Promise<boolean>;
+  deleteTask: (taskId: string) => Promise<void>;
   addMessage: (msg: Omit<ChatMessage, 'id' | 'timestamp'>) => void;
   appendToLastMessage: (text: string) => void;
   clearMessages: () => void;
@@ -268,7 +271,11 @@ export const useStore = create<StoreState>((set, get) => {
         });
         if (res.ok) {
           await get().fetchSchedule();
-          get().addToast('Cron job scheduled', 'success');
+          await get().fetchTasks();
+          get().addToast('Task scheduled successfully', 'success');
+        } else {
+          const err = await res.json().catch(() => ({}));
+          get().addToast(`Schedule failed: ${err.detail || 'Error'}`, 'warning');
         }
       } catch (err) {
         console.error("Add Cron Schedule Error:", err);
@@ -283,11 +290,67 @@ export const useStore = create<StoreState>((set, get) => {
         });
         if (res.ok) {
           await get().fetchSchedule();
+          await get().fetchTasks();
           get().addToast('Schedule removed', 'info');
         }
       } catch (err) {
         console.error("Remove Schedule Job Error:", err);
       }
+    },
+
+    runScheduleJob: async (jobId: string) => {
+      try {
+        const res = await fetch(`${API_BASE}/api/schedule/${jobId}/run`, {
+          method: 'POST',
+          headers: getHeaders()
+        });
+        if (res.ok) {
+          get().addToast(`Triggered execution for '${jobId}'`, 'success');
+          // Refresh tasks & schedule after short delay so updated status is visible
+          setTimeout(() => {
+            get().fetchTasks();
+            get().fetchSchedule();
+          }, 800);
+        } else {
+          get().addToast(`Failed to trigger job: ${res.statusText}`, 'warning');
+        }
+      } catch (err) {
+        console.error("Run Schedule Job Error:", err);
+      }
+    },
+
+    deleteTask: async (taskId: string) => {
+      try {
+        const res = await fetch(`${API_BASE}/api/tasks/${taskId}`, {
+          method: 'DELETE',
+          headers: getHeaders()
+        });
+        if (res.ok) {
+          await get().fetchTasks();
+          await get().fetchSchedule();
+          get().addToast('Task deleted', 'info');
+        }
+      } catch (err) {
+        console.error("Delete Task Error:", err);
+      }
+    },
+
+    createTask: async (taskData: Partial<Task>) => {
+      try {
+        const res = await fetch(`${API_BASE}/api/tasks`, {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify(taskData)
+        });
+        if (res.ok) {
+          await get().fetchTasks();
+          get().addToast('Task created', 'success');
+          return true;
+        }
+      } catch (err) {
+        console.error("Create Task Error:", err);
+      }
+      return false;
     },
 
     addMessage: (msg) => {

@@ -3,7 +3,7 @@ klause:
   user_name: Ayush
   version: 0.1.0
   wake_word: klause
-  personality: minimalist
+  personality: supportive
 ai:
   provider: nvidia
   nvidia_model: nvidia/nemotron-3-ultra-550b-a55b
